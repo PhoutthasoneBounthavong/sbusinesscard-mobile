@@ -5,78 +5,235 @@ import {
   View,
   TouchableOpacity,
   ScrollView,
-  SafeAreaView,
+  TextInput,
   Share,
-  Alert,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-import { fetchMyDigitalCard, API_BASE } from "../api";
+import { Ionicons } from "@expo/vector-icons";
+import {
+  fetchMyDigitalCard,
+  saveMyDigitalCard,
+  getLocalDigitalCardSync,
+  API_BASE,
+} from "../api";
+import { useAlert } from "../context/AlertContext";
 
-export default function MyDigitalCardScreen() {
-  const [card, setCard] = useState({
-    full_name: "Alex Morgan",
-    job_title: "Chief Executive Officer & Founder",
-    company: "Aura Technologies Inc.",
-    headline: "Designing next-generation spatial computing & AI systems.",
-    phone: "+1 (555) 234-5678",
-    email: "alex.morgan@auratech.io",
-    website: "https://auratech.io",
-    slug: "alex-morgan",
-  });
+const CARD_THEMES = [
+  {
+    id: "apple_dark",
+    label: "Apple Dark",
+    bg: "#1C1C1E",
+    border: "rgba(255,255,255,0.14)",
+    accent: "#0071E3",
+    accentLight: "#409CFF",
+  },
+  {
+    id: "midnight_blue",
+    label: "Midnight Blue",
+    bg: "#0B192C",
+    border: "rgba(64,156,255,0.3)",
+    accent: "#0A84FF",
+    accentLight: "#64D2FF",
+  },
+  {
+    id: "obsidian_gold",
+    label: "Obsidian Gold",
+    bg: "#1A1610",
+    border: "rgba(255,214,10,0.3)",
+    accent: "#D4AF37",
+    accentLight: "#FFD60A",
+  },
+  {
+    id: "emerald_pro",
+    label: "Emerald Pro",
+    bg: "#0D1F17",
+    border: "rgba(48,209,88,0.3)",
+    accent: "#28CD41",
+    accentLight: "#30D158",
+  },
+];
+
+const DEFAULT_CARD = {
+  full_name: "George-B",
+  job_title: "Chief Executive Officer & Founder",
+  company: "SBusinessCard Technologies",
+  badge_text: "VIP FOUNDER",
+  headline: "Designing next-generation spatial computing & AI systems.",
+  bio: "Building elegant software at the intersection of design, engineering, and human experience.",
+  theme: "apple_dark",
+  phone: "+1 (555) 234-5678",
+  email: "george@sbusinesscard.app",
+  website: "https://sbusinesscard.app",
+  address: "1 Infinite Loop, Cupertino, CA",
+  slug: "George-B",
+};
+
+export default function MyDigitalCardScreen({ insets }) {
+  const { showAlert } = useAlert();
+  const [mode, setMode] = useState("preview"); // 'preview' | 'studio'
+  const [card, setCard] = useState(() => getLocalDigitalCardSync() || DEFAULT_CARD);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     fetchMyDigitalCard()
       .then((res) => {
-        if (res.card) setCard(res.card);
+        if (res.card) {
+          setCard((prev) => ({ ...prev, ...res.card }));
+        }
       })
       .catch(() => {});
   }, []);
 
-  const publicUrl = `http://localhost:5173/c/${card.slug || "alex-morgan"}`;
+  const activeTheme =
+    CARD_THEMES.find((t) => t.id === card.theme) || CARD_THEMES[0];
+
+  const hostIpMatch = (API_BASE || "").match(/https?:\/\/([^:/]+)/);
+  const hostIp = hostIpMatch ? hostIpMatch[1] : "192.168.150.142";
+  const publicUrl = `http://${hostIp}:5173/c/${card.slug || "George-B"}`;
 
   const handleShare = async () => {
     try {
       await Share.share({
         message: `Connect with ${card.full_name} (${card.job_title} at ${card.company}): ${publicUrl}`,
         url: publicUrl,
-        title: `${card.full_name}'s Business Card`,
+        title: `${card.full_name}'s Digital Business Card`,
       });
     } catch (error) {
-      Alert.alert("Share Error", error.message);
+      showAlert({
+        title: "Share Error",
+        message: error.message || "Failed to share card",
+        type: "error",
+      });
+    }
+  };
+
+  const handleSaveStudio = async () => {
+    if (!card.full_name || !card.full_name.trim()) {
+      showAlert({
+        title: "Name Required",
+        message: "Please enter your full name for your digital card.",
+        type: "warning",
+      });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const res = await saveMyDigitalCard(card);
+      if (res.card) setCard((prev) => ({ ...prev, ...res.card }));
+      setMode("preview");
+      showAlert({
+        title: "Digital Card Saved",
+        message: res.cloudSynced
+          ? "Your digital business card is saved locally and synced to the cloud!"
+          : "Your digital business card is saved to your phone's Local Vault!",
+        type: "success",
+      });
+    } catch (err) {
+      showAlert({
+        title: "Save Notice",
+        message: err.message || "Saved locally on device.",
+        type: "info",
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>My Digital Card</Text>
-          <Text style={styles.headerSubtitle}>Tap or share to connect instantly</Text>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
+    >
+      <ScrollView
+        contentContainerStyle={[
+          styles.content,
+          { paddingBottom: 120 + (insets?.bottom || 0) },
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        {/* Top Header + Mode Switcher */}
+        <View style={styles.headerRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.headerTitle}>
+              {mode === "studio" ? "Card Studio" : "My Digital Card"}
+            </Text>
+            <Text style={styles.headerSubtitle}>
+              {mode === "studio"
+                ? "Customize your personal shareable business card"
+                : "Tap or share your QR card to connect instantly"}
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={[
+              styles.studioToggleBtn,
+              mode === "studio" && styles.studioToggleBtnActive,
+            ]}
+            onPress={() => setMode(mode === "preview" ? "studio" : "preview")}
+            activeOpacity={0.8}
+          >
+            <Ionicons
+              name={mode === "preview" ? "color-wand-outline" : "eye-outline"}
+              size={15}
+              color="#FFFFFF"
+              style={{ marginRight: 6 }}
+            />
+            <Text style={styles.studioToggleBtnText}>
+              {mode === "preview" ? "Card Studio" : "Preview"}
+            </Text>
+          </TouchableOpacity>
         </View>
 
-        {/* Apple Wallet Style Digital Card */}
-        <View style={styles.digitalCard}>
+        {/* Live Apple Wallet Style Digital Card Preview (Always Visible!) */}
+        <View
+          style={[
+            styles.digitalCard,
+            {
+              backgroundColor: activeTheme.bg,
+              borderColor: activeTheme.border,
+            },
+          ]}
+        >
           <View style={styles.cardTopBar}>
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>VIP FOUNDER</Text>
+            <View
+              style={[
+                styles.badge,
+                {
+                  backgroundColor: `${activeTheme.accent}33`,
+                  borderColor: `${activeTheme.accent}66`,
+                },
+              ]}
+            >
+              <Text style={[styles.badgeText, { color: activeTheme.accentLight }]}>
+                {(card.badge_text || "VIP FOUNDER").toUpperCase()}
+              </Text>
             </View>
             <Text style={styles.nfcText}>NFC / QR ACTIVE</Text>
           </View>
 
           <View style={styles.profileSection}>
-            <View style={styles.avatar}>
+            <View
+              style={[styles.avatar, { backgroundColor: activeTheme.accent }]}
+            >
               <Text style={styles.avatarText}>
-                {card.full_name
+                {(card.full_name || "S")
                   .split(" ")
                   .map((n) => n[0])
                   .join("")
-                  .slice(0, 2)}
+                  .slice(0, 2)
+                  .toUpperCase()}
               </Text>
             </View>
 
             <View style={styles.profileInfo}>
-              <Text style={styles.fullName}>{card.full_name}</Text>
-              <Text style={styles.jobTitle}>{card.job_title}</Text>
-              <Text style={styles.company}>{card.company}</Text>
+              <Text style={styles.fullName}>{card.full_name || "Your Name"}</Text>
+              <Text style={styles.jobTitle}>{card.job_title || "Your Role"}</Text>
+              <Text style={[styles.company, { color: activeTheme.accentLight }]}>
+                {card.company || "Your Company"}
+              </Text>
             </View>
           </View>
 
@@ -85,33 +242,276 @@ export default function MyDigitalCardScreen() {
           ) : null}
 
           <View style={styles.contactDetails}>
-            <Text style={styles.contactItem}>📞 {card.phone}</Text>
-            <Text style={styles.contactItem}>✉️ {card.email}</Text>
-            <Text style={styles.contactItem}>🌐 {card.website}</Text>
+            {card.phone ? (
+              <View style={styles.contactRow}>
+                <Ionicons
+                  name="call-outline"
+                  size={15}
+                  color={activeTheme.accentLight}
+                  style={{ marginRight: 8 }}
+                />
+                <Text style={styles.contactItem}>{card.phone}</Text>
+              </View>
+            ) : null}
+            {card.email ? (
+              <View style={styles.contactRow}>
+                <Ionicons
+                  name="mail-outline"
+                  size={15}
+                  color={activeTheme.accentLight}
+                  style={{ marginRight: 8 }}
+                />
+                <Text style={styles.contactItem}>{card.email}</Text>
+              </View>
+            ) : null}
+            {card.website ? (
+              <View style={styles.contactRow}>
+                <Ionicons
+                  name="globe-outline"
+                  size={15}
+                  color={activeTheme.accentLight}
+                  style={{ marginRight: 8 }}
+                />
+                <Text style={styles.contactItem}>{card.website}</Text>
+              </View>
+            ) : null}
+            {card.address ? (
+              <View style={styles.contactRow}>
+                <Ionicons
+                  name="location-outline"
+                  size={15}
+                  color={activeTheme.accentLight}
+                  style={{ marginRight: 8 }}
+                />
+                <Text style={styles.contactItem}>{card.address}</Text>
+              </View>
+            ) : null}
           </View>
         </View>
 
-        {/* QR Code Sharing Box */}
-        <View style={styles.qrContainer}>
-          <Text style={styles.qrTitle}>Conference QR Code</Text>
-          <Text style={styles.qrSubtitle}>Others can scan this with their phone camera to save your card</Text>
-
-          <View style={styles.qrPlaceholder}>
-            {/* Visual simulation of high-density QR code */}
-            <View style={styles.qrGrid}>
-              <View style={[styles.qrBlock, styles.qrCornerTL]} />
-              <View style={[styles.qrBlock, styles.qrCornerTR]} />
-              <View style={[styles.qrBlock, styles.qrCornerBL]} />
-              <Text style={styles.qrCenterText}>SCAN ME</Text>
+        {mode === "studio" ? (
+          /* ============================================================
+             CLIENT CARD STUDIO EDITOR (Customize Theme & Contact Fields)
+             ============================================================ */
+          <View style={styles.studioFormCard}>
+            <Text style={styles.studioSectionLabel}>1. CHOOSE CARD THEME</Text>
+            <View style={styles.themeRow}>
+              {CARD_THEMES.map((t) => {
+                const isSelected = (card.theme || "apple_dark") === t.id;
+                return (
+                  <TouchableOpacity
+                    key={t.id}
+                    style={[
+                      styles.themeChip,
+                      { backgroundColor: t.bg, borderColor: t.border },
+                      isSelected && {
+                        borderColor: t.accentLight,
+                        borderWidth: 2,
+                      },
+                    ]}
+                    onPress={() => setCard({ ...card, theme: t.id })}
+                    activeOpacity={0.8}
+                  >
+                    <View
+                      style={[
+                        styles.themeDot,
+                        { backgroundColor: t.accentLight },
+                      ]}
+                    />
+                    <Text style={styles.themeChipText}>{t.label}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
-          </View>
 
-          <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
-            <Text style={styles.shareButtonText}>Share Digital Card Link (AirDrop / SMS)</Text>
-          </TouchableOpacity>
-        </View>
+            <Text style={[styles.studioSectionLabel, { marginTop: 18 }]}>
+              2. IDENTITY & ROLE
+            </Text>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Full Name</Text>
+              <TextInput
+                style={styles.fieldInput}
+                value={card.full_name}
+                onChangeText={(v) => setCard({ ...card, full_name: v })}
+                placeholder="e.g. Alex Morgan"
+                placeholderTextColor="#636366"
+              />
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Job Title / Position</Text>
+              <TextInput
+                style={styles.fieldInput}
+                value={card.job_title}
+                onChangeText={(v) => setCard({ ...card, job_title: v })}
+                placeholder="e.g. Chief Executive Officer"
+                placeholderTextColor="#636366"
+              />
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Company / Organization</Text>
+              <TextInput
+                style={styles.fieldInput}
+                value={card.company}
+                onChangeText={(v) => setCard({ ...card, company: v })}
+                placeholder="e.g. SBusinessCard Inc."
+                placeholderTextColor="#636366"
+              />
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Top Badge Label</Text>
+              <TextInput
+                style={styles.fieldInput}
+                value={card.badge_text}
+                onChangeText={(v) => setCard({ ...card, badge_text: v })}
+                placeholder="e.g. VIP FOUNDER"
+                placeholderTextColor="#636366"
+              />
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Headline / Tagline</Text>
+              <TextInput
+                style={styles.fieldInput}
+                value={card.headline}
+                onChangeText={(v) => setCard({ ...card, headline: v })}
+                placeholder="Short tagline or mission..."
+                placeholderTextColor="#636366"
+              />
+            </View>
+
+            <Text style={[styles.studioSectionLabel, { marginTop: 14 }]}>
+              3. CONTACT CHANNELS
+            </Text>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Phone Number</Text>
+              <TextInput
+                style={styles.fieldInput}
+                value={card.phone}
+                onChangeText={(v) => setCard({ ...card, phone: v })}
+                keyboardType="phone-pad"
+                placeholder="+66 81 234 5678"
+                placeholderTextColor="#636366"
+              />
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Email Address</Text>
+              <TextInput
+                style={styles.fieldInput}
+                value={card.email}
+                onChangeText={(v) => setCard({ ...card, email: v })}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                placeholder="you@company.com"
+                placeholderTextColor="#636366"
+              />
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Website URL</Text>
+              <TextInput
+                style={styles.fieldInput}
+                value={card.website}
+                onChangeText={(v) => setCard({ ...card, website: v })}
+                autoCapitalize="none"
+                placeholder="https://yourcompany.com"
+                placeholderTextColor="#636366"
+              />
+            </View>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Office / Location Address</Text>
+              <TextInput
+                style={styles.fieldInput}
+                value={card.address}
+                onChangeText={(v) => setCard({ ...card, address: v })}
+                placeholder="City, Country"
+                placeholderTextColor="#636366"
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.saveStudioButton,
+                { backgroundColor: activeTheme.accent },
+              ]}
+              onPress={handleSaveStudio}
+              disabled={saving}
+              activeOpacity={0.85}
+            >
+              <Ionicons
+                name="checkmark-circle"
+                size={18}
+                color="#FFFFFF"
+                style={{ marginRight: 8 }}
+              />
+              <Text style={styles.saveStudioButtonText}>
+                {saving ? "Saving Card..." : "Save My Digital Card"}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          /* ============================================================
+             PREVIEW & INSTANT QR SHARING MODE
+             ============================================================ */
+          <View style={styles.qrContainer}>
+            <Text style={styles.qrTitle}>Conference QR Code</Text>
+            <Text style={styles.qrSubtitle}>
+              Others can scan this with their phone camera to save your card
+            </Text>
+
+            <View style={styles.qrPlaceholder}>
+              <View style={styles.qrGrid}>
+                <View style={[styles.qrBlock, styles.qrCornerTL]} />
+                <View style={[styles.qrBlock, styles.qrCornerTR]} />
+                <View style={[styles.qrBlock, styles.qrCornerBL]} />
+                <Text style={styles.qrCenterText}>SCAN ME</Text>
+              </View>
+            </View>
+
+            <TouchableOpacity
+              style={[
+                styles.shareButton,
+                { backgroundColor: activeTheme.accent },
+              ]}
+              onPress={handleShare}
+              activeOpacity={0.8}
+            >
+              <Ionicons
+                name="share-outline"
+                size={16}
+                color="#FFFFFF"
+                style={{ marginRight: 8 }}
+              />
+              <Text style={styles.shareButtonText}>
+                Share Digital Card Link (AirDrop / WhatsApp / SMS)
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.secondaryEditBtn}
+              onPress={() => setMode("studio")}
+              activeOpacity={0.75}
+            >
+              <Ionicons
+                name="create-outline"
+                size={15}
+                color="#409CFF"
+                style={{ marginRight: 6 }}
+              />
+              <Text style={styles.secondaryEditBtnText}>
+                Customize in Card Studio
+              </Text>
+            </TouchableOpacity>
+          </View>
+        )}
       </ScrollView>
-    </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -122,11 +522,14 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 20,
-    paddingTop: 10,
-    paddingBottom: 50,
+    paddingTop: 8,
   },
-  header: {
-    marginBottom: 20,
+  headerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 18,
+    gap: 12,
   },
   headerTitle: {
     color: "#FFFFFF",
@@ -139,17 +542,36 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 2,
   },
+  studioToggleBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#0071E3",
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderRadius: 20,
+  },
+  studioToggleBtnActive: {
+    backgroundColor: "#2C2C2E",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+  },
+  studioToggleBtnText: {
+    color: "#FFFFFF",
+    fontSize: 12.5,
+    fontWeight: "600",
+  },
   digitalCard: {
     backgroundColor: "#1C1C1E",
     borderRadius: 24,
     padding: 22,
     borderWidth: 1,
     borderColor: "rgba(255,255,255,0.12)",
-    marginBottom: 25,
+    marginBottom: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.5,
-    shadowRadius: 16,
+    shadowOpacity: 0.4,
+    shadowRadius: 20,
+    elevation: 8,
   },
   cardTopBar: {
     flexDirection: "row",
@@ -160,22 +582,22 @@ const styles = StyleSheet.create({
   badge: {
     backgroundColor: "rgba(0,113,227,0.2)",
     paddingHorizontal: 10,
-    paddingVertical: 3,
-    borderRadius: 12,
+    paddingVertical: 4,
+    borderRadius: 10,
     borderWidth: 1,
-    borderColor: "rgba(0,113,227,0.4)",
+    borderColor: "rgba(0,113,227,0.3)",
   },
   badgeText: {
     color: "#409CFF",
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: "700",
     letterSpacing: 0.5,
   },
   nfcText: {
     color: "#86868B",
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: "600",
-    letterSpacing: 1,
+    letterSpacing: 0.5,
   },
   profileSection: {
     flexDirection: "row",
@@ -183,15 +605,13 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   avatar: {
-    width: 54,
-    height: 54,
+    width: 56,
+    height: 56,
     borderRadius: 18,
     backgroundColor: "#0071E3",
     alignItems: "center",
     justifyContent: "center",
     marginRight: 16,
-    borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.2)",
   },
   avatarText: {
     color: "#FFFFFF",
@@ -203,11 +623,12 @@ const styles = StyleSheet.create({
   },
   fullName: {
     color: "#FFFFFF",
-    fontSize: 18,
+    fontSize: 19,
     fontWeight: "700",
+    letterSpacing: -0.4,
   },
   jobTitle: {
-    color: "#AEAEB2",
+    color: "#86868B",
     fontSize: 12,
     marginTop: 2,
   },
@@ -218,25 +639,96 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   headline: {
-    color: "#86868B",
-    fontSize: 12,
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 13,
     fontStyle: "italic",
     lineHeight: 18,
-    marginBottom: 14,
-    backgroundColor: "rgba(255,255,255,0.03)",
-    padding: 10,
-    borderRadius: 12,
+    marginBottom: 16,
   },
   contactDetails: {
-    gap: 4,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255,255,255,0.06)",
-    paddingTop: 12,
+    borderTopColor: "rgba(255,255,255,0.08)",
+    paddingTop: 14,
+    gap: 10,
+  },
+  contactRow: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   contactItem: {
-    color: "#AEAEB2",
+    color: "#FFFFFF",
+    fontSize: 12,
+  },
+  studioFormCard: {
+    backgroundColor: "#1C1C1E",
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.1)",
+  },
+  studioSectionLabel: {
+    color: "#86868B",
     fontSize: 11,
-    fontWeight: "500",
+    fontWeight: "700",
+    letterSpacing: 0.8,
+    marginBottom: 10,
+  },
+  themeRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+  },
+  themeChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  themeDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    marginRight: 6,
+  },
+  themeChipText: {
+    color: "#FFFFFF",
+    fontSize: 11.5,
+    fontWeight: "600",
+  },
+  fieldGroup: {
+    marginBottom: 12,
+  },
+  fieldLabel: {
+    color: "#AEAEB2",
+    fontSize: 11.5,
+    fontWeight: "600",
+    marginBottom: 5,
+  },
+  fieldInput: {
+    backgroundColor: "#2C2C2E",
+    color: "#FFFFFF",
+    fontSize: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 11,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.08)",
+  },
+  saveStudioButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#0071E3",
+    paddingVertical: 14,
+    borderRadius: 16,
+    marginTop: 8,
+  },
+  saveStudioButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "700",
   },
   qrContainer: {
     backgroundColor: "#1C1C1E",
@@ -250,29 +742,29 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "700",
+    marginBottom: 4,
   },
   qrSubtitle: {
     color: "#86868B",
-    fontSize: 11,
+    fontSize: 12,
     textAlign: "center",
-    marginTop: 4,
     marginBottom: 20,
+    paddingHorizontal: 10,
   },
   qrPlaceholder: {
-    width: 200,
-    height: 200,
+    width: 180,
+    height: 180,
     backgroundColor: "#FFFFFF",
     borderRadius: 20,
-    padding: 16,
+    padding: 14,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 20,
   },
   qrGrid: {
-    width: "100%",
-    height: "100%",
-    borderWidth: 2,
-    borderColor: "#000000",
+    width: 150,
+    height: 150,
+    backgroundColor: "#000000",
     borderRadius: 12,
     position: "relative",
     alignItems: "center",
@@ -282,19 +774,31 @@ const styles = StyleSheet.create({
     position: "absolute",
     width: 32,
     height: 32,
-    backgroundColor: "#000000",
-    borderRadius: 4,
+    borderWidth: 6,
+    borderColor: "#FFFFFF",
+    borderRadius: 8,
   },
-  qrCornerTL: { top: 6, left: 6 },
-  qrCornerTR: { top: 6, right: 6 },
-  qrCornerBL: { bottom: 6, left: 6 },
+  qrCornerTL: {
+    top: 8,
+    left: 8,
+  },
+  qrCornerTR: {
+    top: 8,
+    right: 8,
+  },
+  qrCornerBL: {
+    bottom: 8,
+    left: 8,
+  },
   qrCenterText: {
-    color: "#000000",
-    fontSize: 12,
+    color: "#FFFFFF",
+    fontSize: 10,
     fontWeight: "800",
     letterSpacing: 1,
   },
   shareButton: {
+    flexDirection: "row",
+    justifyContent: "center",
     backgroundColor: "#0071E3",
     paddingVertical: 14,
     paddingHorizontal: 20,
@@ -304,6 +808,17 @@ const styles = StyleSheet.create({
   },
   shareButtonText: {
     color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  secondaryEditBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 14,
+    paddingVertical: 6,
+  },
+  secondaryEditBtnText: {
+    color: "#409CFF",
     fontSize: 13,
     fontWeight: "600",
   },

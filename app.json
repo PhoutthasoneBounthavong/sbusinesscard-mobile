@@ -1,24 +1,62 @@
 {
   "expo": {
-    "name": "mobile-app",
-    "slug": "mobile-app",
+    "name": "SBusinessCard",
+    "slug": "sbusinesscard",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "dark",
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "SBusinessCard needs camera access to scan business cards."
+        }
+      ],
+      [
+        "expo-contacts",
+        {
+          "contactsPermission": "SBusinessCard needs contacts access to save scanned business cards directly to your address book."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "SBusinessCard needs photo library access to import card photos."
+        }
+      ],
+      "expo-sqlite"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.georgewassup.sbusinesscard",
+      "infoPlist": {
+        "NSCameraUsageDescription": "SBusinessCard needs camera access to scan business cards.",
+        "NSContactsUsageDescription": "SBusinessCard needs contacts access to save scanned business cards directly to your address book.",
+        "NSPhotoLibraryUsageDescription": "SBusinessCard needs photo library access to import card photos."
+      }
     },
     "android": {
+      "package": "com.georgewassup.sbusinesscard",
+      "usesCleartextTraffic": true,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_CONTACTS",
+        "android.permission.WRITE_CONTACTS"
+      ],
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/android-icon-foreground.png",
-        "backgroundImage": "./assets/android-icon-background.png",
-        "monochromeImage": "./assets/android-icon-monochrome.png"
+        "backgroundColor": "#000000",
+        "foregroundImage": "./assets/android-icon-foreground.png"
       }
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "16ab16a5-d7fa-4d0c-8915-a8d7adac33cf"
+      }
+    },
+    "owner": "georgewassup"
   }
 }
