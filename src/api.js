@@ -826,3 +826,19 @@ export async function generateFollowupMessage(cardId, context = "") {
   if (!res.ok) throw new Error("Failed to generate follow-up message");
   return res.json();
 }
+
+export async function fetchDigitalCardQr(slug = null) {
+  try {
+    const headers = await getAuthHeaders();
+    const query = slug ? `?slug=${encodeURIComponent(slug)}` : "";
+    const res = await fetchWithTimeout(
+      `${API_BASE}/digital-card/qr${query}`,
+      { headers },
+      4500
+    );
+    if (res.ok) {
+      return await res.json();
+    }
+  } catch (e) {}
+  return null;
+}

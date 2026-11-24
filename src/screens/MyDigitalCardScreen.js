@@ -9,11 +9,15 @@ import {
   Share,
   KeyboardAvoidingView,
   Platform,
+  Image,
+  Linking,
+  ActivityIndicator,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import {
   fetchMyDigitalCard,
   saveMyDigitalCard,
+  fetchDigitalCardQr,
   getLocalDigitalCardSync,
   API_BASE,
 } from "../api";
@@ -74,23 +78,42 @@ export default function MyDigitalCardScreen({ insets }) {
   const [mode, setMode] = useState("preview"); // 'preview' | 'studio'
   const [card, setCard] = useState(() => getLocalDigitalCardSync() || DEFAULT_CARD);
   const [saving, setSaving] = useState(false);
+  const [qrData, setQrData] = useState(null);
+  const [qrMode, setQrMode] = useState("profile"); // 'profile' | 'instant'
+  const [loadingQr, setLoadingQr] = useState(false);
+
+  const loadQr = async (slugToUse) => {
+    setLoadingQr(true);
+    try {
+      const data = await fetchDigitalCardQr(slugToUse);
+      if (data) setQrData(data);
+    } catch (e) {}
+    setLoadingQr(false);
+  };
 
   useEffect(() => {
     fetchMyDigitalCard()
       .then((res) => {
         if (res.card) {
           setCard((prev) => ({ ...prev, ...res.card }));
+          loadQr(res.card.slug);
+        } else {
+          loadQr(card.slug);
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        loadQr(card.slug);
+      });
   }, []);
 
   const activeTheme =
     CARD_THEMES.find((t) => t.id === card.theme) || CARD_THEMES[0];
 
-  const hostIpMatch = (API_BASE || "").match(/https?:\/\/([^:/]+)/);
-  const hostIp = hostIpMatch ? hostIpMatch[1] : "192.168.150.142";
-  const publicUrl = `http://${hostIp}:5173/c/${card.slug || "George-B"}`;
+  const cleanBase = (API_BASE || "").replace(/\/api\/?$/, "");
+  const fallbackUrl = `${cleanBase}/c/${card.slug || "alex-morgan"}`;
+  const publicUrl = (qrMode === "instant" ? qrData?.auto_url : qrData?.url) || fallbackUrl;
+  const activeQrUri = (qrMode === "instant" ? qrData?.auto_qr_data_uri : qrData?.qr_data_uri) ||
+    `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(publicUrl)}`;
 
   const handleShare = async () => {
     try {
@@ -435,6 +458,28 @@ export default function MyDigitalCardScreen({ insets }) {
               />
             </View>
 
+            <Text style={[styles.studioSectionLabel, { marginTop: 14 }]}>
+              4. CONFERENCE QR CODE URL (CLEAN LINK)
+            </Text>
+
+            <View style={styles.fieldGroup}>
+              <Text style={styles.fieldLabel}>Custom Profile Slug</Text>
+              <TextInput
+                style={styles.fieldInput}
+                value={card.slug || ""}
+                onChangeText={(v) => {
+                  const cleaned = v.toLowerCase().replace(/[^a-z0-9_-]/g, "");
+                  setCard({ ...card, slug: cleaned });
+                }}
+                autoCapitalize="none"
+                placeholder="e.g. george-b"
+                placeholderTextColor="#636366"
+              />
+              <Text style={styles.slugHintText}>
+                QR code encodes: /c/{card.slug || "your-name"}. Keeping it short ensures a clean, sparse QR code that scans instantly from meters away!
+              </Text>
+            </View>
+
             <TouchableOpacity
               style={[
                 styles.saveStudioButton,
@@ -462,16 +507,100 @@ export default function MyDigitalCardScreen({ insets }) {
           <View style={styles.qrContainer}>
             <Text style={styles.qrTitle}>Conference QR Code</Text>
             <Text style={styles.qrSubtitle}>
-              Others can scan this with their phone camera to save your card
+              Generated from your clean site URL so the QR matrix stays sparse, clear, and scans instantly from meters away!
             </Text>
 
-            <View style={styles.qrPlaceholder}>
-              <View style={styles.qrGrid}>
-                <View style={[styles.qrBlock, styles.qrCornerTL]} />
-                <View style={[styles.qrBlock, styles.qrCornerTR]} />
-                <View style={[styles.qrBlock, styles.qrCornerBL]} />
-                <Text style={styles.qrCenterText}>SCAN ME</Text>
+            {/* QR Mode Switcher: Profile vs Instant Add */}
+            <View style={styles.qrModeSelector}>
+              <TouchableOpacity
+                style={[
+                  styles.qrModeTab,
+                  qrMode === "profile" && styles.qrModeTabActive,
+                ]}
+                onPress={() => setQrMode("profile")}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name="globe-outline"
+                  size={13}
+                  color={qrMode === "profile" ? "#FFFFFF" : "#86868B"}
+                  style={{ marginRight: 5 }}
+                />
+                <Text
+                  style={[
+                    styles.qrModeTabText,
+                    qrMode === "profile" && styles.qrModeTabTextActive,
+                  ]}
+                >
+                  Digital Profile
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.qrModeTab,
+                  qrMode === "instant" && styles.qrModeTabActive,
+                ]}
+                onPress={() => setQrMode("instant")}
+                activeOpacity={0.8}
+              >
+                <Ionicons
+                  name="flash"
+                  size={13}
+                  color={qrMode === "instant" ? "#FFFFFF" : "#86868B"}
+                  style={{ marginRight: 5 }}
+                />
+                <Text
+                  style={[
+                    styles.qrModeTabText,
+                    qrMode === "instant" && styles.qrModeTabTextActive,
+                  ]}
+                >
+                  Instant Contact Add
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* Live Scannable Apple-grade QR Code */}
+            <View style={styles.qrWhiteBox}>
+              {loadingQr ? (
+                <View style={styles.qrLoadingBox}>
+                  <ActivityIndicator size="small" color="#0071E3" />
+                  <Text style={styles.qrLoadingText}>Generating QR...</Text>
+                </View>
+              ) : (
+                <Image
+                  source={{ uri: activeQrUri }}
+                  style={styles.qrImageReal}
+                  resizeMode="contain"
+                />
+              )}
+              <View style={styles.qrBadgeRow}>
+                <View style={styles.qrGreenDot} />
+                <Text style={styles.qrBadgeText}>
+                  {qrMode === "instant" ? "Direct vCard Auto-Download" : "Clean URL • Sparse High-Contrast QR"}
+                </Text>
               </View>
+            </View>
+
+            {/* Public URL Pill & Actions */}
+            <View style={styles.urlDisplayRow}>
+              <Ionicons
+                name="link-outline"
+                size={14}
+                color="#86868B"
+                style={{ marginRight: 6 }}
+              />
+              <Text style={styles.urlDisplayText} numberOfLines={1}>
+                {publicUrl}
+              </Text>
+              <TouchableOpacity
+                onPress={() => Linking.openURL(publicUrl)}
+                style={styles.openUrlBtn}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.openUrlBtnText}>Test</Text>
+              </TouchableOpacity>
             </View>
 
             <TouchableOpacity
@@ -505,7 +634,7 @@ export default function MyDigitalCardScreen({ insets }) {
                 style={{ marginRight: 6 }}
               />
               <Text style={styles.secondaryEditBtnText}>
-                Customize in Card Studio
+                Customize Theme & Link in Card Studio
               </Text>
             </TouchableOpacity>
           </View>
@@ -751,50 +880,120 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     paddingHorizontal: 10,
   },
-  qrPlaceholder: {
+  qrModeSelector: {
+    flexDirection: "row",
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderRadius: 12,
+    padding: 3,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  qrModeTab: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 7,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+  },
+  qrModeTabActive: {
+    backgroundColor: "#0071E3",
+  },
+  qrModeTabText: {
+    color: "#86868B",
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  qrModeTabTextActive: {
+    color: "#FFFFFF",
+  },
+  qrWhiteBox: {
+    width: 220,
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 16,
+    shadowColor: "#000000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.35,
+    shadowRadius: 20,
+    elevation: 8,
+  },
+  qrImageReal: {
     width: 180,
     height: 180,
-    backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    padding: 14,
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 20,
-  },
-  qrGrid: {
-    width: 150,
-    height: 150,
-    backgroundColor: "#000000",
     borderRadius: 12,
-    position: "relative",
+  },
+  qrLoadingBox: {
+    width: 180,
+    height: 180,
     alignItems: "center",
     justifyContent: "center",
   },
-  qrBlock: {
-    position: "absolute",
-    width: 32,
-    height: 32,
-    borderWidth: 6,
-    borderColor: "#FFFFFF",
+  qrLoadingText: {
+    marginTop: 8,
+    fontSize: 11,
+    color: "#86868B",
+    fontWeight: "500",
+  },
+  qrBadgeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
+    backgroundColor: "#F2F2F7",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
     borderRadius: 8,
   },
-  qrCornerTL: {
-    top: 8,
-    left: 8,
+  qrGreenDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: "#34C759",
+    marginRight: 6,
   },
-  qrCornerTR: {
-    top: 8,
-    right: 8,
+  qrBadgeText: {
+    fontSize: 9,
+    color: "#1D1D1F",
+    fontWeight: "600",
   },
-  qrCornerBL: {
-    bottom: 8,
-    left: 8,
+  urlDisplayRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.12)",
+    borderRadius: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    width: "100%",
+    marginBottom: 16,
   },
-  qrCenterText: {
+  urlDisplayText: {
+    flex: 1,
     color: "#FFFFFF",
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 1,
+    fontSize: 11,
+    fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace",
+  },
+  openUrlBtn: {
+    backgroundColor: "rgba(255, 255, 255, 0.15)",
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+    borderRadius: 6,
+    marginLeft: 8,
+  },
+  openUrlBtnText: {
+    color: "#409CFF",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  slugHintText: {
+    color: "#86868B",
+    fontSize: 11,
+    lineHeight: 15,
+    marginTop: 6,
   },
   shareButton: {
     flexDirection: "row",
