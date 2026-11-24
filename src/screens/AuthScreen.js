@@ -74,23 +74,23 @@ export default function AuthScreen({ onAuthSuccess, insets }) {
     }
   };
 
-  const handleQuickDemoLogin = async () => {
-    setLoading(true);
-    try {
-      const data = await loginUser("demo@cardr.app", "demo1234");
-      if (data && data.user) {
-        onAuthSuccess(data.user);
-      }
-    } catch (err) {
-      showAlert({
-        title: "Demo Login Failed",
-        message: err.message,
-        type: "error",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  // const handleQuickDemoLogin = async () => {
+  //   setLoading(true);
+  //   try {
+  //     const data = await loginUser("******", "*****");
+  //     if (data && data.user) {
+  //       onAuthSuccess(data.user);
+  //     }
+  //   } catch (err) {
+  //     showAlert({
+  //       title: "Demo Login Failed",
+  //       message: err.message,
+  //       type: "error",
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   return (
     <KeyboardAvoidingView
@@ -219,7 +219,7 @@ export default function AuthScreen({ onAuthSuccess, insets }) {
           </TouchableOpacity>
         </View>
 
-        {/* Demo Login Quick Action */}
+        {/* Demo Login Quick Action
         <View style={styles.demoSection}>
           <Text style={styles.demoHint}>Looking to test quickly?</Text>
           <TouchableOpacity
@@ -231,7 +231,7 @@ export default function AuthScreen({ onAuthSuccess, insets }) {
             <Ionicons name="flash-outline" size={16} color="#0A84FF" />
             <Text style={styles.demoButtonText}>1-Tap Demo Account Login</Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
       </ScrollView>
     </KeyboardAvoidingView>
   );

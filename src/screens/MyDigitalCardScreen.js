@@ -79,7 +79,6 @@ export default function MyDigitalCardScreen({ insets }) {
   const [card, setCard] = useState(() => getLocalDigitalCardSync() || DEFAULT_CARD);
   const [saving, setSaving] = useState(false);
   const [qrData, setQrData] = useState(null);
-  const [qrMode, setQrMode] = useState("profile"); // 'profile' | 'instant'
   const [loadingQr, setLoadingQr] = useState(false);
 
   const loadQr = async (slugToUse) => {
@@ -111,16 +110,16 @@ export default function MyDigitalCardScreen({ insets }) {
 
   const cleanBase = (API_BASE || "").replace(/\/api\/?$/, "");
   const fallbackUrl = `${cleanBase}/c/${card.slug || "alex-morgan"}`;
-  const publicUrl = (qrMode === "instant" ? qrData?.auto_url : qrData?.url) || fallbackUrl;
-  const activeQrUri = (qrMode === "instant" ? qrData?.auto_qr_data_uri : qrData?.qr_data_uri) ||
+  const publicUrl = qrData?.url || fallbackUrl;
+  const activeQrUri = qrData?.qr_data_uri ||
     `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(publicUrl)}`;
 
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Connect with ${card.full_name} (${card.job_title} at ${card.company}): ${publicUrl}`,
+        message: `Add ${card.full_name} (${card.job_title} at ${card.company}) to your contacts: ${publicUrl}`,
         url: publicUrl,
-        title: `${card.full_name}'s Digital Business Card`,
+        title: `${card.full_name}'s Contact Card`,
       });
     } catch (error) {
       showAlert({
@@ -459,7 +458,7 @@ export default function MyDigitalCardScreen({ insets }) {
             </View>
 
             <Text style={[styles.studioSectionLabel, { marginTop: 14 }]}>
-              4. CONFERENCE QR CODE URL (CLEAN LINK)
+              4. SHORT CONTACT QR LINK (SLUG)
             </Text>
 
             <View style={styles.fieldGroup}>
@@ -505,61 +504,10 @@ export default function MyDigitalCardScreen({ insets }) {
              PREVIEW & INSTANT QR SHARING MODE
              ============================================================ */
           <View style={styles.qrContainer}>
-            <Text style={styles.qrTitle}>Conference QR Code</Text>
+            <Text style={styles.qrTitle}>My Contact QR</Text>
             <Text style={styles.qrSubtitle}>
-              Generated from your clean site URL so the QR matrix stays sparse, clear, and scans instantly from meters away!
+              Scan with iPhone or Android camera to instantly add my contact to your phone address book.
             </Text>
-
-            {/* QR Mode Switcher: Profile vs Instant Add */}
-            <View style={styles.qrModeSelector}>
-              <TouchableOpacity
-                style={[
-                  styles.qrModeTab,
-                  qrMode === "profile" && styles.qrModeTabActive,
-                ]}
-                onPress={() => setQrMode("profile")}
-                activeOpacity={0.8}
-              >
-                <Ionicons
-                  name="globe-outline"
-                  size={13}
-                  color={qrMode === "profile" ? "#FFFFFF" : "#86868B"}
-                  style={{ marginRight: 5 }}
-                />
-                <Text
-                  style={[
-                    styles.qrModeTabText,
-                    qrMode === "profile" && styles.qrModeTabTextActive,
-                  ]}
-                >
-                  Digital Profile
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[
-                  styles.qrModeTab,
-                  qrMode === "instant" && styles.qrModeTabActive,
-                ]}
-                onPress={() => setQrMode("instant")}
-                activeOpacity={0.8}
-              >
-                <Ionicons
-                  name="flash"
-                  size={13}
-                  color={qrMode === "instant" ? "#FFFFFF" : "#86868B"}
-                  style={{ marginRight: 5 }}
-                />
-                <Text
-                  style={[
-                    styles.qrModeTabText,
-                    qrMode === "instant" && styles.qrModeTabTextActive,
-                  ]}
-                >
-                  Instant Contact Add
-                </Text>
-              </TouchableOpacity>
-            </View>
 
             {/* Live Scannable Apple-grade QR Code */}
             <View style={styles.qrWhiteBox}>
@@ -578,15 +526,15 @@ export default function MyDigitalCardScreen({ insets }) {
               <View style={styles.qrBadgeRow}>
                 <View style={styles.qrGreenDot} />
                 <Text style={styles.qrBadgeText}>
-                  {qrMode === "instant" ? "Direct vCard Auto-Download" : "Clean URL • Sparse High-Contrast QR"}
+                  Instant Contact Card (Apple & Android)
                 </Text>
               </View>
             </View>
 
-            {/* Public URL Pill & Actions */}
+            {/* Direct Contact URL Pill & Test Button */}
             <View style={styles.urlDisplayRow}>
               <Ionicons
-                name="link-outline"
+                name="person-add-outline"
                 size={14}
                 color="#86868B"
                 style={{ marginRight: 6 }}
@@ -618,7 +566,7 @@ export default function MyDigitalCardScreen({ insets }) {
                 style={{ marginRight: 8 }}
               />
               <Text style={styles.shareButtonText}>
-                Share Digital Card Link (AirDrop / WhatsApp / SMS)
+                Share Contact Card (AirDrop / WhatsApp / SMS)
               </Text>
             </TouchableOpacity>
 
@@ -634,7 +582,7 @@ export default function MyDigitalCardScreen({ insets }) {
                 style={{ marginRight: 6 }}
               />
               <Text style={styles.secondaryEditBtnText}>
-                Customize Theme & Link in Card Studio
+                Edit Contact Details in Card Studio
               </Text>
             </TouchableOpacity>
           </View>
