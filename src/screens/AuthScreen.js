@@ -114,7 +114,7 @@ export default function AuthScreen({ onAuthSuccess, insets }) {
           </View>
           <Text style={styles.title}>SBusinessCard</Text>
           <Text style={styles.subtitle}>
-            Apple-Grade Business Card Scanner & Vault
+            Business Card Scanner
           </Text>
         </View>
 
