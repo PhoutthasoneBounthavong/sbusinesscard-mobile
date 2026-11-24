@@ -754,7 +754,7 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
                     <Text style={styles.inputMiniLabel}>COMPANY</Text>
                     <TextInput
                       style={styles.insetTextInput}
-                      placeholder="e.g. Aura Technologies Inc."
+                      placeholder="e.g. SBusinessCard Inc."
                       placeholderTextColor="#636366"
                       value={editForm.company}
                       onChangeText={(text) =>

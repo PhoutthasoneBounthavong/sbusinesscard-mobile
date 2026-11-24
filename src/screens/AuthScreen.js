@@ -149,7 +149,7 @@ export default function AuthScreen({ onAuthSuccess, insets }) {
                 <Ionicons name="person-outline" size={18} color="#86868B" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
-                  placeholder="e.g. Alex Morgan"
+                  placeholder="e.g. Business Card"
                   placeholderTextColor="#636366"
                   value={fullName}
                   onChangeText={setFullName}
@@ -165,7 +165,7 @@ export default function AuthScreen({ onAuthSuccess, insets }) {
               <Ionicons name="mail-outline" size={18} color="#86868B" style={styles.inputIcon} />
               <TextInput
                 style={styles.input}
-                placeholder="name@company.com"
+                placeholder="name@sbusinesscard.app"
                 placeholderTextColor="#636366"
                 value={email}
                 onChangeText={setEmail}

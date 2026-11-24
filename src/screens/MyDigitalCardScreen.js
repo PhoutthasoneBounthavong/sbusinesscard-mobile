@@ -380,7 +380,7 @@ export default function MyDigitalCardScreen({ insets }) {
                 style={styles.fieldInput}
                 value={card.full_name}
                 onChangeText={(v) => setCard({ ...card, full_name: v })}
-                placeholder="e.g. Alex Morgan"
+                placeholder="e.g. Business Card"
                 placeholderTextColor="#636366"
               />
             </View>
@@ -453,7 +453,7 @@ export default function MyDigitalCardScreen({ insets }) {
                 onChangeText={(v) => setCard({ ...card, email: v })}
                 keyboardType="email-address"
                 autoCapitalize="none"
-                placeholder="you@company.com"
+                placeholder="you@sbusinesscard.app"
                 placeholderTextColor="#636366"
               />
             </View>
@@ -465,7 +465,7 @@ export default function MyDigitalCardScreen({ insets }) {
                 value={card.website}
                 onChangeText={(v) => setCard({ ...card, website: v })}
                 autoCapitalize="none"
-                placeholder="https://yourcompany.com"
+                placeholder="https://sbusinesscard.app"
                 placeholderTextColor="#636366"
               />
             </View>
