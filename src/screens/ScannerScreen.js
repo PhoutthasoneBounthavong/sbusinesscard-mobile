@@ -589,10 +589,6 @@ export default function ScannerScreen({ onNavigateToVault, onClose, insets }) {
           flash="off"
           animateShutter={false}
           enableTorch={torch}
-          barcodeScannerSettings={{
-            barcodeTypes: ["qr"],
-          }}
-          onBarcodeScanned={handleBarcodeScanned}
           onCameraReady={() => {
             setIsCameraReady(true);
             setCameraError(false);
