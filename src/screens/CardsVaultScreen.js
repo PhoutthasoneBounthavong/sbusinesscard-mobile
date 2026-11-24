@@ -83,7 +83,15 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
     try {
       const syncRes = await syncVaultWithCloud();
       if (syncRes && Array.isArray(syncRes.cards)) {
-        setAllCards(syncRes.cards);
+        // Safe UI state update: never wipe local cards if sync returned empty
+        if (syncRes.cards.length > 0) {
+          setAllCards(syncRes.cards);
+        } else {
+          const currentLocal = await getLocalVaultCards();
+          if (!currentLocal || currentLocal.length === 0) {
+            setAllCards([]);
+          }
+        }
         setCloudStatus({
           cloudOnline: syncRes.cloudOnline,
           pendingCount: syncRes.pendingCount || 0,

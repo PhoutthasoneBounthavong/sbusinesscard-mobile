@@ -381,7 +381,7 @@ export async function syncVaultWithCloud() {
       } catch (e) {}
     }
 
-    // 3. Pull latest online cards & merge into local vault
+    // 3. Pull latest online cards & merge non-destructively into local vault
     const res = await fetchWithTimeout(`${API_BASE}/cards`, { headers }, 4500);
     if (res.ok) {
       cloudOnline = true;
@@ -389,26 +389,40 @@ export async function syncVaultWithCloud() {
       const remoteCards = (data.cards || []).map((rc) => ({ ...rc, synced: true }));
       const activeDeletedIds = await getDeletedIds();
 
-      // Keep unsynced local cards + merge with remote cards
-      const stillUnsynced = localCards.filter(
-        (c) => c.synced === false && !activeDeletedIds.includes(String(c.id))
+      // Active local cards not explicitly deleted by user
+      const activeLocalCards = localCards.filter(
+        (c) => !activeDeletedIds.includes(String(c.id))
       );
       const filteredRemote = remoteCards.filter(
         (rc) => !activeDeletedIds.includes(String(rc.id))
       );
 
-      // Deduplicate so unsynced local edits take precedence
-      const remoteById = new Map(filteredRemote.map((rc) => [String(rc.id), rc]));
-      for (const localItem of stillUnsynced) {
-        if (!String(localItem.id).startsWith("local_")) {
-          remoteById.set(String(localItem.id), localItem);
+      // Build unified non-destructive merged map
+      const mergedMap = new Map();
+      for (const rc of filteredRemote) {
+        mergedMap.set(String(rc.id), rc);
+      }
+
+      // Preserve all active local cards: unsynced edits override remote,
+      // and local cards not present on remote are NEVER dropped
+      for (const lc of activeLocalCards) {
+        const localId = String(lc.id);
+        if (!mergedMap.has(localId)) {
+          mergedMap.set(localId, lc);
+        } else {
+          if (lc.synced === false) {
+            mergedMap.set(localId, { ...mergedMap.get(localId), ...lc });
+          }
         }
       }
 
-      const localNewCards = stillUnsynced.filter((c) =>
-        String(c.id).startsWith("local_")
-      );
-      const merged = [...localNewCards, ...Array.from(remoteById.values())];
+      const merged = Array.from(mergedMap.values());
+      merged.sort((a, b) => {
+        const timeA = new Date(a.created_at || 0).getTime();
+        const timeB = new Date(b.created_at || 0).getTime();
+        return timeB - timeA;
+      });
+
       await persistLocalVault(merged);
 
       const nowIso = new Date().toISOString();

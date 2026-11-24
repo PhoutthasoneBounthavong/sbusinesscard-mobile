@@ -71,10 +71,22 @@ export async function saveToNativeContacts(card, showAlert = null) {
             addresses,
           };
 
+          // On iOS, query default container to ensure contact appears in user's default address book (e.g. iCloud)
+          let defaultContainerId = undefined;
+          if (Platform.OS === "ios" && typeof Contacts.getDefaultContainerIdAsync === "function") {
+            try {
+              defaultContainerId = await Contacts.getDefaultContainerIdAsync();
+            } catch (cErr) {}
+          }
+
           // Try addContactAsync (legacy module - works on all iOS Expo Go versions)
           if (typeof Contacts.addContactAsync === "function") {
             try {
-              await Contacts.addContactAsync(contactData);
+              if (defaultContainerId) {
+                await Contacts.addContactAsync(contactData, defaultContainerId);
+              } else {
+                await Contacts.addContactAsync(contactData);
+              }
               if (typeof showAlert === "function") {
                 showAlert({
                   title: "Contact Saved!",
@@ -139,7 +151,7 @@ export async function saveToNativeContacts(card, showAlert = null) {
   // Opens Apple iOS native Contacts sheet to save contact
   try {
     let vcardUrl;
-    if (card.id) {
+    if (card.id && !String(card.id).startsWith("local_")) {
       vcardUrl = `${API_BASE}/cards/${card.id}/vcard`;
     } else {
       const queryParts = [
