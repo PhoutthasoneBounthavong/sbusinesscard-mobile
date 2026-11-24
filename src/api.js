@@ -16,7 +16,7 @@ function resolveDynamicApiBase() {
     }
   } catch (e) {}
 
-  return process.env.EXPO_PUBLIC_API_URL || "http://192.168.116.245:8000/api";
+  return process.env.EXPO_PUBLIC_API_URL || "https://entrepreneur-wrist-nodes-mitsubishi.trycloudflare.com/api";
 }
 
 export const API_BASE = resolveDynamicApiBase();
