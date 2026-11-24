@@ -16,7 +16,7 @@ function resolveDynamicApiBase() {
     }
   } catch (e) {}
 
-  return process.env.EXPO_PUBLIC_API_URL || "https://entrepreneur-wrist-nodes-mitsubishi.trycloudflare.com/api";
+  return process.env.EXPO_PUBLIC_API_URL || "https://eagle-bosnia-cash-luxury.trycloudflare.com/api";
 }
 
 export const API_BASE = resolveDynamicApiBase();
@@ -489,6 +489,19 @@ export async function logoutUser() {
 
 // --- OCR Card Scanner ---
 export async function scanBusinessCard(imageUri) {
+  // 0. Primary: On-Device Google ML Kit Text Recognition (100% offline, zero server needed!)
+  if (Platform.OS !== "web") {
+    try {
+      const { recognizeCardOnDevice } = require("./services/onDeviceOcr");
+      const localResult = await recognizeCardOnDevice(imageUri);
+      if (localResult && localResult.card) {
+        return localResult;
+      }
+    } catch (e) {
+      console.warn("On-device OCR fallback notice:", e);
+    }
+  }
+
   const token = await getStoredToken();
 
   // 1. On Native (Android & iOS), use FileSystem.uploadAsync for bulletproof multipart upload
