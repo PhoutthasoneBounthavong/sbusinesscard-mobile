@@ -42,7 +42,12 @@
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.READ_CONTACTS",
-        "android.permission.WRITE_CONTACTS"
+        "android.permission.WRITE_CONTACTS",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
+        "android.permission.READ_CONTACTS",
+        "android.permission.WRITE_CONTACTS",
+        "android.permission.RECORD_AUDIO"
       ],
       "adaptiveIcon": {
         "backgroundColor": "#000000",
@@ -57,6 +62,12 @@
         "projectId": "16ab16a5-d7fa-4d0c-8915-a8d7adac33cf"
       }
     },
-    "owner": "georgewassup"
+    "owner": "georgewassup",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/16ab16a5-d7fa-4d0c-8915-a8d7adac33cf"
+    }
   }
 }
