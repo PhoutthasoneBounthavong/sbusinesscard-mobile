@@ -129,9 +129,12 @@ export default function MyDigitalCardScreen({ insets }) {
     return lines.join("\r\n");
   };
 
-  const vcardText = qrData?.vcard || buildDirectVcard(card);
-  const activeQrUri = qrData?.qr_data_uri ||
-    `https://api.qrserver.com/v1/create-qr-code/?size=450x450&data=${encodeURIComponent(vcardText)}`;
+  // Always use the live card fields to ensure QR code reflects any edits made in Card Studio
+  const vcardText = buildDirectVcard(card);
+  const activeQrUri =
+    qrData && qrData.vcard && qrData.vcard.trim() === vcardText.trim()
+      ? qrData.qr_data_uri
+      : `https://api.qrserver.com/v1/create-qr-code/?size=450x450&data=${encodeURIComponent(vcardText)}`;
 
   const handleShare = async () => {
     try {
@@ -161,13 +164,16 @@ export default function MyDigitalCardScreen({ insets }) {
     setSaving(true);
     try {
       const res = await saveMyDigitalCard(card);
-      if (res.card) setCard((prev) => ({ ...prev, ...res.card }));
+      const savedCard = res.card ? { ...card, ...res.card } : card;
+      setCard(savedCard);
+      // Immediately refresh the QR code with latest saved contact details
+      await loadQr(savedCard.slug);
       setMode("preview");
       showAlert({
         title: "Digital Card Saved",
         message: res.cloudSynced
-          ? "Your digital business card is saved locally and synced to the cloud!"
-          : "Your digital business card is saved to your phone's Local Vault!",
+          ? "Your digital business card and QR code have been updated and synced!"
+          : "Your digital business card and QR code have been updated!",
         type: "success",
       });
     } catch (err) {
