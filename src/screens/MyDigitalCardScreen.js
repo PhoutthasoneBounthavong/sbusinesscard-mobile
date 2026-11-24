@@ -26,12 +26,25 @@ import { useTheme } from "../context/ThemeContext";
 
 const CARD_THEMES = [
   {
+    id: "claude_cream",
+    label: "Claude Cream",
+    bg: "#FAF7F2",
+    border: "rgba(100, 80, 60, 0.22)",
+    accent: "#C15F3C",
+    accentLight: "#D97757",
+    textColor: "#2E2825",
+    textMuted: "#736B66",
+    isLightCard: true,
+  },
+  {
     id: "apple_dark",
     label: "Apple Dark",
     bg: "#1C1C1E",
     border: "rgba(255,255,255,0.14)",
     accent: "#0071E3",
     accentLight: "#409CFF",
+    textColor: "#FFFFFF",
+    textMuted: "#86868B",
   },
   {
     id: "midnight_blue",
@@ -40,6 +53,8 @@ const CARD_THEMES = [
     border: "rgba(64,156,255,0.3)",
     accent: "#0A84FF",
     accentLight: "#64D2FF",
+    textColor: "#FFFFFF",
+    textMuted: "#86868B",
   },
   {
     id: "obsidian_gold",
@@ -48,6 +63,8 @@ const CARD_THEMES = [
     border: "rgba(255,214,10,0.3)",
     accent: "#D4AF37",
     accentLight: "#FFD60A",
+    textColor: "#FFFFFF",
+    textMuted: "#86868B",
   },
   {
     id: "emerald_pro",
@@ -56,6 +73,8 @@ const CARD_THEMES = [
     border: "rgba(48,209,88,0.3)",
     accent: "#28CD41",
     accentLight: "#30D158",
+    textColor: "#FFFFFF",
+    textMuted: "#86868B",
   },
 ];
 
@@ -268,7 +287,14 @@ export default function MyDigitalCardScreen({ insets }) {
                 {(card.badge_text || "STAFF").toUpperCase()}
               </Text>
             </View>
-            <Text style={styles.nfcText}>NFC / QR ACTIVE</Text>
+            <Text
+              style={[
+                styles.nfcText,
+                activeTheme.isLightCard && { color: activeTheme.textMuted || "#736B66" },
+              ]}
+            >
+              NFC / QR ACTIVE
+            </Text>
           </View>
 
           <View style={styles.profileSection}>
@@ -286,8 +312,22 @@ export default function MyDigitalCardScreen({ insets }) {
             </View>
 
             <View style={styles.profileInfo}>
-              <Text style={styles.fullName}>{card.full_name || "Your Name"}</Text>
-              <Text style={styles.jobTitle}>{card.job_title || "Your Role"}</Text>
+              <Text
+                style={[
+                  styles.fullName,
+                  activeTheme.isLightCard && { color: activeTheme.textColor || "#2E2825" },
+                ]}
+              >
+                {card.full_name || "Your Name"}
+              </Text>
+              <Text
+                style={[
+                  styles.jobTitle,
+                  activeTheme.isLightCard && { color: activeTheme.textMuted || "#736B66" },
+                ]}
+              >
+                {card.job_title || "Your Role"}
+              </Text>
               <Text style={[styles.company, { color: activeTheme.accentLight }]}>
                 {card.company || "Your Company"}
               </Text>
@@ -295,10 +335,22 @@ export default function MyDigitalCardScreen({ insets }) {
           </View>
 
           {card.headline ? (
-            <Text style={styles.headline}>"{card.headline}"</Text>
+            <Text
+              style={[
+                styles.headline,
+                activeTheme.isLightCard && { color: activeTheme.textColor || "#2E2825" },
+              ]}
+            >
+              "{card.headline}"
+            </Text>
           ) : null}
 
-          <View style={styles.contactDetails}>
+          <View
+            style={[
+              styles.contactDetails,
+              activeTheme.isLightCard && { borderTopColor: "rgba(100,80,60,0.12)" },
+            ]}
+          >
             {card.phone ? (
               <View style={styles.contactRow}>
                 <Ionicons
@@ -307,7 +359,14 @@ export default function MyDigitalCardScreen({ insets }) {
                   color={activeTheme.accentLight}
                   style={{ marginRight: 8 }}
                 />
-                <Text style={styles.contactItem}>{card.phone}</Text>
+                <Text
+                  style={[
+                    styles.contactItem,
+                    activeTheme.isLightCard && { color: activeTheme.textColor || "#2E2825" },
+                  ]}
+                >
+                  {card.phone}
+                </Text>
               </View>
             ) : null}
             {card.email ? (
@@ -318,7 +377,14 @@ export default function MyDigitalCardScreen({ insets }) {
                   color={activeTheme.accentLight}
                   style={{ marginRight: 8 }}
                 />
-                <Text style={styles.contactItem}>{card.email}</Text>
+                <Text
+                  style={[
+                    styles.contactItem,
+                    activeTheme.isLightCard && { color: activeTheme.textColor || "#2E2825" },
+                  ]}
+                >
+                  {card.email}
+                </Text>
               </View>
             ) : null}
             {card.website ? (
@@ -329,7 +395,14 @@ export default function MyDigitalCardScreen({ insets }) {
                   color={activeTheme.accentLight}
                   style={{ marginRight: 8 }}
                 />
-                <Text style={styles.contactItem}>{card.website}</Text>
+                <Text
+                  style={[
+                    styles.contactItem,
+                    activeTheme.isLightCard && { color: activeTheme.textColor || "#2E2825" },
+                  ]}
+                >
+                  {card.website}
+                </Text>
               </View>
             ) : null}
             {card.address ? (
@@ -340,7 +413,14 @@ export default function MyDigitalCardScreen({ insets }) {
                   color={activeTheme.accentLight}
                   style={{ marginRight: 8 }}
                 />
-                <Text style={styles.contactItem}>{card.address}</Text>
+                <Text
+                  style={[
+                    styles.contactItem,
+                    activeTheme.isLightCard && { color: activeTheme.textColor || "#2E2825" },
+                  ]}
+                >
+                  {card.address}
+                </Text>
               </View>
             ) : null}
           </View>
@@ -350,8 +430,18 @@ export default function MyDigitalCardScreen({ insets }) {
           /* ============================================================
              CLIENT CARD STUDIO EDITOR (Customize Theme & Contact Fields)
              ============================================================ */
-          <View style={styles.studioFormCard}>
-            <Text style={styles.studioSectionLabel}>1. CHOOSE CARD THEME</Text>
+          <View
+            style={[
+              styles.studioFormCard,
+              {
+                backgroundColor: appTheme.surface,
+                borderColor: appTheme.border,
+              },
+            ]}
+          >
+            <Text style={[styles.studioSectionLabel, { color: appTheme.textSecondary }]}>
+              1. CHOOSE CARD THEME
+            </Text>
             <View style={styles.themeRow}>
               {CARD_THEMES.map((t) => {
                 const isSelected = (card.theme || "apple_dark") === t.id;
@@ -375,120 +465,190 @@ export default function MyDigitalCardScreen({ insets }) {
                         { backgroundColor: t.accentLight },
                       ]}
                     />
-                    <Text style={styles.themeChipText}>{t.label}</Text>
+                    <Text
+                      style={[
+                        styles.themeChipText,
+                        t.isLightCard && { color: t.textColor || "#2E2825" },
+                      ]}
+                    >
+                      {t.label}
+                    </Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
 
-            <Text style={[styles.studioSectionLabel, { marginTop: 18 }]}>
+            <Text style={[styles.studioSectionLabel, { marginTop: 18, color: appTheme.textSecondary }]}>
               2. IDENTITY & ROLE
             </Text>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Full Name</Text>
+              <Text style={[styles.fieldLabel, { color: appTheme.textSecondary }]}>Full Name</Text>
               <TextInput
-                style={styles.fieldInput}
+                style={[
+                  styles.fieldInput,
+                  {
+                    backgroundColor: appTheme.surfaceElevated,
+                    borderColor: appTheme.border,
+                    color: appTheme.textPrimary,
+                  },
+                ]}
                 value={card.full_name}
                 onChangeText={(v) => setCard({ ...card, full_name: v })}
                 placeholder="e.g. Business Card"
-                placeholderTextColor="#636366"
+                placeholderTextColor={appTheme.textMuted}
               />
             </View>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Job Title / Position</Text>
+              <Text style={[styles.fieldLabel, { color: appTheme.textSecondary }]}>Job Title / Position</Text>
               <TextInput
-                style={styles.fieldInput}
+                style={[
+                  styles.fieldInput,
+                  {
+                    backgroundColor: appTheme.surfaceElevated,
+                    borderColor: appTheme.border,
+                    color: appTheme.textPrimary,
+                  },
+                ]}
                 value={card.job_title}
                 onChangeText={(v) => setCard({ ...card, job_title: v })}
                 placeholder="e.g. Chief Executive Officer"
-                placeholderTextColor="#636366"
+                placeholderTextColor={appTheme.textMuted}
               />
             </View>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Company / Organization</Text>
+              <Text style={[styles.fieldLabel, { color: appTheme.textSecondary }]}>Company / Organization</Text>
               <TextInput
-                style={styles.fieldInput}
+                style={[
+                  styles.fieldInput,
+                  {
+                    backgroundColor: appTheme.surfaceElevated,
+                    borderColor: appTheme.border,
+                    color: appTheme.textPrimary,
+                  },
+                ]}
                 value={card.company}
                 onChangeText={(v) => setCard({ ...card, company: v })}
                 placeholder="e.g. SBusinessCard Inc."
-                placeholderTextColor="#636366"
+                placeholderTextColor={appTheme.textMuted}
               />
             </View>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Top Badge Label</Text>
+              <Text style={[styles.fieldLabel, { color: appTheme.textSecondary }]}>Top Badge Label</Text>
               <TextInput
-                style={styles.fieldInput}
+                style={[
+                  styles.fieldInput,
+                  {
+                    backgroundColor: appTheme.surfaceElevated,
+                    borderColor: appTheme.border,
+                    color: appTheme.textPrimary,
+                  },
+                ]}
                 value={card.badge_text}
                 onChangeText={(v) => setCard({ ...card, badge_text: v })}
                 placeholder="e.g. STAFF"
-                placeholderTextColor="#636366"
+                placeholderTextColor={appTheme.textMuted}
               />
             </View>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Headline / Tagline</Text>
+              <Text style={[styles.fieldLabel, { color: appTheme.textSecondary }]}>Headline / Tagline</Text>
               <TextInput
-                style={styles.fieldInput}
+                style={[
+                  styles.fieldInput,
+                  {
+                    backgroundColor: appTheme.surfaceElevated,
+                    borderColor: appTheme.border,
+                    color: appTheme.textPrimary,
+                  },
+                ]}
                 value={card.headline}
                 onChangeText={(v) => setCard({ ...card, headline: v })}
                 placeholder="Short tagline or mission..."
-                placeholderTextColor="#636366"
+                placeholderTextColor={appTheme.textMuted}
               />
             </View>
 
-            <Text style={[styles.studioSectionLabel, { marginTop: 14 }]}>
+            <Text style={[styles.studioSectionLabel, { marginTop: 14, color: appTheme.textSecondary }]}>
               3. CONTACT CHANNELS
             </Text>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Phone Number</Text>
+              <Text style={[styles.fieldLabel, { color: appTheme.textSecondary }]}>Phone Number</Text>
               <TextInput
-                style={styles.fieldInput}
+                style={[
+                  styles.fieldInput,
+                  {
+                    backgroundColor: appTheme.surfaceElevated,
+                    borderColor: appTheme.border,
+                    color: appTheme.textPrimary,
+                  },
+                ]}
                 value={card.phone}
                 onChangeText={(v) => setCard({ ...card, phone: v })}
                 keyboardType="phone-pad"
                 placeholder="+66 81 234 5678"
-                placeholderTextColor="#636366"
+                placeholderTextColor={appTheme.textMuted}
               />
             </View>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Email Address</Text>
+              <Text style={[styles.fieldLabel, { color: appTheme.textSecondary }]}>Email Address</Text>
               <TextInput
-                style={styles.fieldInput}
+                style={[
+                  styles.fieldInput,
+                  {
+                    backgroundColor: appTheme.surfaceElevated,
+                    borderColor: appTheme.border,
+                    color: appTheme.textPrimary,
+                  },
+                ]}
                 value={card.email}
                 onChangeText={(v) => setCard({ ...card, email: v })}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 placeholder="you@sbusinesscard.app"
-                placeholderTextColor="#636366"
+                placeholderTextColor={appTheme.textMuted}
               />
             </View>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Website URL</Text>
+              <Text style={[styles.fieldLabel, { color: appTheme.textSecondary }]}>Website URL</Text>
               <TextInput
-                style={styles.fieldInput}
+                style={[
+                  styles.fieldInput,
+                  {
+                    backgroundColor: appTheme.surfaceElevated,
+                    borderColor: appTheme.border,
+                    color: appTheme.textPrimary,
+                  },
+                ]}
                 value={card.website}
                 onChangeText={(v) => setCard({ ...card, website: v })}
                 autoCapitalize="none"
                 placeholder="https://sbusinesscard.app"
-                placeholderTextColor="#636366"
+                placeholderTextColor={appTheme.textMuted}
               />
             </View>
 
             <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Office / Location Address</Text>
+              <Text style={[styles.fieldLabel, { color: appTheme.textSecondary }]}>Office / Location Address</Text>
               <TextInput
-                style={styles.fieldInput}
+                style={[
+                  styles.fieldInput,
+                  {
+                    backgroundColor: appTheme.surfaceElevated,
+                    borderColor: appTheme.border,
+                    color: appTheme.textPrimary,
+                  },
+                ]}
                 value={card.address}
                 onChangeText={(v) => setCard({ ...card, address: v })}
                 placeholder="City, Country"
-                placeholderTextColor="#636366"
+                placeholderTextColor={appTheme.textMuted}
               />
             </View>
 

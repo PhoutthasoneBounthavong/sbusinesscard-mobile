@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, View, TouchableOpacity, Text } from "react-native";
+import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "../context/ThemeContext";
 
@@ -13,48 +13,38 @@ export default function ThemeToggle() {
       style={[
         styles.track,
         {
-          backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "#E4DECFA0",
-          borderColor: isDark ? "rgba(255, 255, 255, 0.14)" : "rgba(60, 50, 40, 0.15)",
+          backgroundColor: isDark ? "#1C1C1E" : "#E8E2D5",
+          borderColor: isDark ? "rgba(255, 255, 255, 0.16)" : "rgba(90, 75, 55, 0.22)",
         },
       ]}
       accessibilityRole="button"
-      accessibilityLabel={`Switch to ${isDark ? "Light Cream" : "Dark"} theme`}
+      accessibilityLabel={`Switch to ${isDark ? "Claude Cream Light" : "Dark"} theme`}
     >
-      {/* Light Segment */}
+      {/* Light Segment (Sun) */}
       <View
         style={[
-          styles.segment,
-          !isDark && [
-            styles.activeThumbLight,
-            {
-              shadowColor: "#000",
-            },
-          ],
+          styles.circleThumb,
+          !isDark && styles.activeCircleLight,
         ]}
       >
         <Ionicons
           name={!isDark ? "sunny" : "sunny-outline"}
           size={14}
-          color={!isDark ? "#D97706" : "rgba(255, 255, 255, 0.4)"}
+          color={!isDark ? "#D97706" : "rgba(255, 255, 255, 0.35)"}
         />
       </View>
 
-      {/* Dark Segment */}
+      {/* Dark Segment (Moon) */}
       <View
         style={[
-          styles.segment,
-          isDark && [
-            styles.activeThumbDark,
-            {
-              shadowColor: "#000",
-            },
-          ],
+          styles.circleThumb,
+          isDark && styles.activeCircleDark,
         ]}
       >
         <Ionicons
           name={isDark ? "moon" : "moon-outline"}
           size={13}
-          color={isDark ? "#409CFF" : "rgba(60, 50, 40, 0.4)"}
+          color={isDark ? "#409CFF" : "rgba(90, 75, 55, 0.45)"}
         />
       </View>
     </TouchableOpacity>
@@ -63,34 +53,44 @@ export default function ThemeToggle() {
 
 const styles = StyleSheet.create({
   track: {
-    width: 62,
-    height: 30,
-    borderRadius: 15,
+    width: 66,
+    height: 34,
+    borderRadius: 17,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 3,
+    paddingHorizontal: 3,
     borderWidth: 1,
+    overflow: "hidden",
   },
-  segment: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+  circleThumb: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     alignItems: "center",
     justifyContent: "center",
+    overflow: "hidden",
   },
-  activeThumbLight: {
+  activeCircleLight: {
     backgroundColor: "#FFFFFF",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.18,
-    shadowRadius: 3,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(0, 0, 0, 0.08)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1.5 },
+    shadowOpacity: 0.16,
+    shadowRadius: 2.5,
     elevation: 3,
   },
-  activeThumbDark: {
+  activeCircleDark: {
     backgroundColor: "#2C2C2E",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.4,
-    shadowRadius: 3,
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.18)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1.5 },
+    shadowOpacity: 0.35,
+    shadowRadius: 2.5,
     elevation: 3,
   },
 });

@@ -419,7 +419,7 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
                 >
                   <Ionicons name="logo-whatsapp" size={13} color="#25D366" style={{ marginRight: 4 }} />
                   <Text style={styles.detailWhatsAppPillText}>
-                    {phoneList.length > 1 ? `WA #${idx + 1}` : "WhatsApp"}
+                    {phoneList.length > 1 ? `${idx + 1}` : "WhatsApp"}
                   </Text>
                 </TouchableOpacity>
               </View>

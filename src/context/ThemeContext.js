@@ -35,32 +35,33 @@ export const THEMES = {
   light: {
     id: "light",
     isDark: false,
-    background: "#F7F4EC", // Warm luxury cream/ivory linen paper (not stark white)
+    background: "#FAF7F2", // Anthropic Claude's exact signature warm parchment cream
     surface: "#FFFFFF", // Crisp contrast card surface
-    surfaceElevated: "#EFECE3", // Warm cream secondary container
-    surfaceSecondary: "#E8E3D7", // Soft warm oat
-    headerBg: "#F0EBE0", // Warm cream translucent header
-    tabBarBg: "#F0EBE0", // Warm cream bottom tab bar
-    border: "rgba(50, 42, 30, 0.10)", // Subtle warm stone divider
-    borderSubtle: "rgba(50, 42, 30, 0.05)",
-    textPrimary: "#1F1D1A", // Rich espresso charcoal (never harsh black)
-    textSecondary: "#6B655B", // Warm stone taupe
-    textMuted: "#969085", // Muted taupe
+    surfaceElevated: "#F3EEE5", // Claude's warm soft cream container
+    surfaceSecondary: "#EAE3D6", // Soft warm parchment oat
+    headerBg: "#F5F0E6", // Claude's warm parchment header
+    tabBarBg: "#F5F0E6", // Claude's warm parchment bottom tab bar
+    border: "rgba(90, 75, 55, 0.14)", // Warm terracotta stone divider
+    borderSubtle: "rgba(90, 75, 55, 0.07)",
+    textPrimary: "#2E2825", // Claude's exact warm deep charcoal (gentle and rich)
+    textSecondary: "#736B66", // Warm clay/stone secondary text
+    textMuted: "#9C948D", // Warm muted taupe
     inputBg: "#FFFFFF",
-    inputBorder: "rgba(50, 42, 30, 0.16)",
-    accent: "#0071E3", // Apple vibrant royal blue
+    inputBorder: "rgba(90, 75, 55, 0.20)",
+    accent: "#0071E3", // Professional vibrant accent
     accentLight: "#0071E3",
+    accentWarm: "#CC785C", // Claude's warm terracotta highlight
     accentSoft: "rgba(0, 113, 227, 0.10)",
     statusBarStyle: "dark-content",
     cardBg: "#FFFFFF",
-    cardBorder: "rgba(50, 42, 30, 0.08)",
-    shadowColor: "#322A1E",
+    cardBorder: "rgba(90, 75, 55, 0.10)",
+    shadowColor: "#32271E",
     badgeBg: "rgba(0, 113, 227, 0.08)",
     badgeBorder: "rgba(0, 113, 227, 0.22)",
-    pillActiveBg: "#1F1D1A",
+    pillActiveBg: "#2E2825",
     pillActiveText: "#FFFFFF",
-    pillInactiveBg: "#E6E0D2",
-    pillInactiveText: "#6B655B",
+    pillInactiveBg: "#E8E2D5",
+    pillInactiveText: "#736B66",
   },
 };
 
