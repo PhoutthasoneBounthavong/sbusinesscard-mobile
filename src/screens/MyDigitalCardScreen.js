@@ -533,7 +533,7 @@ export default function MyDigitalCardScreen({ insets }) {
               </View>
             </View>
 
-            {/* Direct Contact Card Summary Chip */}
+            {/* Direct Contact Card Summary Chip
             <View style={styles.contactDetailsPill}>
               <View style={styles.contactDetailsRow}>
                 <Ionicons name="person" size={13} color="#409CFF" style={{ marginRight: 6 }} />
@@ -557,7 +557,7 @@ export default function MyDigitalCardScreen({ insets }) {
                   </Text>
                 </View>
               )}
-            </View>
+            </View> */}
 
             <TouchableOpacity
               style={[
