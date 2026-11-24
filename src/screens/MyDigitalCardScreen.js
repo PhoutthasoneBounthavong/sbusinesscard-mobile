@@ -59,18 +59,18 @@ const CARD_THEMES = [
 ];
 
 const DEFAULT_CARD = {
-  full_name: "George-B",
+  full_name: "Businesscard",
   job_title: "Chief Executive Officer & Founder",
   company: "SBusinessCard Technologies",
-  badge_text: "VIP FOUNDER",
+  badge_text: "Staff",
   headline: "Designing next-generation spatial computing & AI systems.",
   bio: "Building elegant software at the intersection of design, engineering, and human experience.",
   theme: "apple_dark",
   phone: "+1 (555) 234-5678",
-  email: "george@sbusinesscard.app",
+  email: "Demo@sbusinesscard.app",
   website: "https://sbusinesscard.app",
   address: "1 Infinite Loop, Cupertino, CA",
-  slug: "George-B",
+  slug: "Demo-B",
 };
 
 export default function MyDigitalCardScreen({ insets }) {
@@ -86,7 +86,7 @@ export default function MyDigitalCardScreen({ insets }) {
     try {
       const data = await fetchDigitalCardQr(slugToUse);
       if (data) setQrData(data);
-    } catch (e) {}
+    } catch (e) { }
     setLoadingQr(false);
   };
 
@@ -254,7 +254,7 @@ export default function MyDigitalCardScreen({ insets }) {
               ]}
             >
               <Text style={[styles.badgeText, { color: activeTheme.accentLight }]}>
-                {(card.badge_text || "VIP FOUNDER").toUpperCase()}
+                {(card.badge_text || "STAFF").toUpperCase()}
               </Text>
             </View>
             <Text style={styles.nfcText}>NFC / QR ACTIVE</Text>
@@ -413,7 +413,7 @@ export default function MyDigitalCardScreen({ insets }) {
                 style={styles.fieldInput}
                 value={card.badge_text}
                 onChangeText={(v) => setCard({ ...card, badge_text: v })}
-                placeholder="e.g. VIP FOUNDER"
+                placeholder="e.g. STAFF"
                 placeholderTextColor="#636366"
               />
             </View>
@@ -479,28 +479,6 @@ export default function MyDigitalCardScreen({ insets }) {
                 placeholder="City, Country"
                 placeholderTextColor="#636366"
               />
-            </View>
-
-            <Text style={[styles.studioSectionLabel, { marginTop: 14 }]}>
-              4. SHORT CONTACT QR LINK (SLUG)
-            </Text>
-
-            <View style={styles.fieldGroup}>
-              <Text style={styles.fieldLabel}>Custom Profile Slug</Text>
-              <TextInput
-                style={styles.fieldInput}
-                value={card.slug || ""}
-                onChangeText={(v) => {
-                  const cleaned = v.toLowerCase().replace(/[^a-z0-9_-]/g, "");
-                  setCard({ ...card, slug: cleaned });
-                }}
-                autoCapitalize="none"
-                placeholder="e.g. george-b"
-                placeholderTextColor="#636366"
-              />
-              <Text style={styles.slugHintText}>
-                QR code encodes: /c/{card.slug || "your-name"}. Keeping it short ensures a clean, sparse QR code that scans instantly from meters away!
-              </Text>
             </View>
 
             <TouchableOpacity
