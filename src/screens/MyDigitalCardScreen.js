@@ -108,18 +108,36 @@ export default function MyDigitalCardScreen({ insets }) {
   const activeTheme =
     CARD_THEMES.find((t) => t.id === card.theme) || CARD_THEMES[0];
 
-  const cleanBase = (API_BASE || "").replace(/\/api\/?$/, "");
-  const fallbackUrl = `${cleanBase}/c/${card.slug || "alex-morgan"}`;
-  const publicUrl = qrData?.url || fallbackUrl;
+  const buildDirectVcard = (c) => {
+    const fullName = (c.full_name || "Contact").trim();
+    const nameParts = fullName.split(/\s+/);
+    const givenName = nameParts[0] || "";
+    const familyName = nameParts.slice(1).join(" ") || "";
+    const lines = [
+      "BEGIN:VCARD",
+      "VERSION:3.0",
+      `FN:${fullName}`,
+      `N:${familyName};${givenName};;;`,
+    ];
+    if (c.company) lines.push(`ORG:${c.company.trim()}`);
+    if (c.job_title) lines.push(`TITLE:${c.job_title.trim()}`);
+    if (c.phone) lines.push(`TEL;TYPE=CELL,VOICE:${c.phone.trim()}`);
+    if (c.email) lines.push(`EMAIL;TYPE=WORK,INTERNET:${c.email.trim()}`);
+    if (c.website) lines.push(`URL:${c.website.trim()}`);
+    if (c.address) lines.push(`ADR;TYPE=WORK:;;${c.address.trim()};;;;`);
+    lines.push("END:VCARD");
+    return lines.join("\r\n");
+  };
+
+  const vcardText = qrData?.vcard || buildDirectVcard(card);
   const activeQrUri = qrData?.qr_data_uri ||
-    `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(publicUrl)}`;
+    `https://api.qrserver.com/v1/create-qr-code/?size=450x450&data=${encodeURIComponent(vcardText)}`;
 
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Add ${card.full_name} (${card.job_title} at ${card.company}) to your contacts: ${publicUrl}`,
-        url: publicUrl,
-        title: `${card.full_name}'s Contact Card`,
+        message: `Contact: ${card.full_name || 'Contact'} (${card.job_title || ''} at ${card.company || ''})\nPhone: ${card.phone || ''}\nEmail: ${card.email || ''}`,
+        title: `${card.full_name || 'My'}'s Contact Card`,
       });
     } catch (error) {
       showAlert({
@@ -531,24 +549,30 @@ export default function MyDigitalCardScreen({ insets }) {
               </View>
             </View>
 
-            {/* Direct Contact URL Pill & Test Button */}
-            <View style={styles.urlDisplayRow}>
-              <Ionicons
-                name="person-add-outline"
-                size={14}
-                color="#86868B"
-                style={{ marginRight: 6 }}
-              />
-              <Text style={styles.urlDisplayText} numberOfLines={1}>
-                {publicUrl}
-              </Text>
-              <TouchableOpacity
-                onPress={() => Linking.openURL(publicUrl)}
-                style={styles.openUrlBtn}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.openUrlBtnText}>Test</Text>
-              </TouchableOpacity>
+            {/* Direct Contact Card Summary Chip */}
+            <View style={styles.contactDetailsPill}>
+              <View style={styles.contactDetailsRow}>
+                <Ionicons name="person" size={13} color="#409CFF" style={{ marginRight: 6 }} />
+                <Text style={styles.contactDetailsText} numberOfLines={1}>
+                  {card.full_name || "Contact Name"}
+                </Text>
+              </View>
+              {!!card.phone && (
+                <View style={styles.contactDetailsRow}>
+                  <Ionicons name="call" size={13} color="#34C759" style={{ marginRight: 6 }} />
+                  <Text style={styles.contactDetailsText} numberOfLines={1}>
+                    {card.phone}
+                  </Text>
+                </View>
+              )}
+              {!!card.company && (
+                <View style={styles.contactDetailsRow}>
+                  <Ionicons name="business" size={13} color="#FF9F0A" style={{ marginRight: 6 }} />
+                  <Text style={styles.contactDetailsText} numberOfLines={1}>
+                    {card.company}
+                  </Text>
+                </View>
+              )}
             </View>
 
             <TouchableOpacity
@@ -906,6 +930,26 @@ const styles = StyleSheet.create({
     fontSize: 9,
     color: "#1D1D1F",
     fontWeight: "600",
+  },
+  contactDetailsPill: {
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.12)",
+    borderRadius: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    width: "100%",
+    marginBottom: 16,
+    gap: 4,
+  },
+  contactDetailsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  contactDetailsText: {
+    color: "#FFFFFF",
+    fontSize: 12,
+    fontWeight: "500",
   },
   urlDisplayRow: {
     flexDirection: "row",
