@@ -8,6 +8,7 @@
       "distribution": "internal"
     },
     "preview": {
+      "channel": "preview",
       "distribution": "internal",
       "android": {
         "buildType": "apk"
@@ -22,6 +23,7 @@
       }
     },
     "preview-simulator": {
+      "channel": "preview",
       "distribution": "internal",
       "ios": {
         "simulator": true
@@ -33,6 +35,7 @@
       }
     },
     "production": {
+      "channel": "production",
       "android": {
         "buildType": "app-bundle"
       },
