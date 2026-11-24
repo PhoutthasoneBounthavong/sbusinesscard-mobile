@@ -18,98 +18,125 @@ export async function saveToNativeContacts(card, showAlert = null) {
   const givenName = nameParts[0] || "Contact";
   const familyName = nameParts.slice(1).join(" ") || "";
 
-  // 1. If on native mobile (iOS or Android), attempt direct Native Address Book insertion
+  // 1. Direct Native Address Book insertion (iOS & Android)
   if (Platform.OS !== "web") {
     try {
-      let Contacts;
+      let Contacts = null;
+
+      // Try expo-contacts/legacy first (official Expo SDK 58 way to add contacts without deprecation errors)
       try {
-        Contacts = require("expo-contacts");
+        Contacts = require("expo-contacts/legacy");
       } catch (e) {
         try {
-          Contacts = require("expo-contacts/legacy");
+          Contacts = require("expo-contacts");
         } catch (err) {
           Contacts = null;
         }
       }
 
       if (Contacts && typeof Contacts.requestPermissionsAsync === "function") {
-        const { status } = await Contacts.requestPermissionsAsync();
+        const permResult = await Contacts.requestPermissionsAsync();
+        const status = permResult?.status;
+
         if (status === "granted") {
           const phones = card.phone
             ? [{ label: "mobile", number: String(card.phone).trim() }]
-            : undefined;
+            : [];
 
           const emails = card.email
-            ? [{ label: "work", address: String(card.email).trim(), email: String(card.email).trim() }]
-            : undefined;
+            ? [{ label: "work", email: String(card.email).trim(), address: String(card.email).trim() }]
+            : [];
 
           const urls = card.website
             ? [{ label: "work", url: String(card.website).trim() }]
-            : undefined;
+            : [];
 
           const addresses = card.address
             ? [{ label: "work", street: String(card.address).trim() }]
-            : undefined;
+            : [];
 
-          // Modern Expo SDK 58 API (Required for iOS / SDK 58)
-          if (Contacts.Contact && typeof Contacts.Contact.create === "function") {
-            await Contacts.Contact.create({
-              givenName,
-              familyName,
-              company: card.company || "",
-              jobTitle: card.job_title || "",
-              note: card.notes || "Saved with SBusinessCard Scanner",
-              phones,
-              emails,
-              urlAddresses: urls,
-              addresses,
-            });
+          // Format compatible with both legacy and new Contact APIs
+          const contactData = {
+            firstName: givenName,
+            lastName: familyName,
+            givenName,
+            familyName,
+            company: card.company || "",
+            jobTitle: card.job_title || "",
+            note: card.notes || "Saved with SBusinessCard Scanner",
+            phoneNumbers: phones,
+            phones,
+            emails,
+            urlAddresses: urls,
+            addresses,
+          };
 
-            if (typeof showAlert === "function") {
-              showAlert({
-                title: "Contact Saved",
-                message: `"${fullName}" has been added to your phone's address book.`,
-                type: "success",
-              });
-            }
-            return { success: true, method: "native" };
-          }
-
-          // Legacy expo-contacts fallback
+          // Try addContactAsync (legacy module - works on all iOS Expo Go versions)
           if (typeof Contacts.addContactAsync === "function") {
-            const legacyFields = Contacts.Fields || {};
-            const contactData = {
-              [legacyFields.FirstName || "firstName"]: givenName,
-              [legacyFields.LastName || "lastName"]: familyName,
-              [legacyFields.Company || "company"]: card.company || "",
-              [legacyFields.JobTitle || "jobTitle"]: card.job_title || "",
-              [legacyFields.Note || "note"]: card.notes || "Saved with SBusinessCard Scanner",
-            };
-            if (phones) contactData[legacyFields.PhoneNumbers || "phoneNumbers"] = phones;
-            if (emails) contactData[legacyFields.Emails || "emails"] = emails;
-            if (urls) contactData[legacyFields.UrlAddresses || "urlAddresses"] = urls;
-            if (addresses) contactData[legacyFields.Addresses || "addresses"] = addresses;
-
-            await Contacts.addContactAsync(contactData);
-
-            if (typeof showAlert === "function") {
-              showAlert({
-                title: "Contact Saved",
-                message: `"${fullName}" has been added to your phone's address book.`,
-                type: "success",
-              });
+            try {
+              await Contacts.addContactAsync(contactData);
+              if (typeof showAlert === "function") {
+                showAlert({
+                  title: "Contact Saved!",
+                  message: `"${fullName}" has been added to your phone's address book.`,
+                  type: "success",
+                });
+              }
+              return { success: true, method: "native_legacy" };
+            } catch (addErr) {
+              console.warn("Contacts.addContactAsync error:", addErr);
             }
-            return { success: true, method: "legacy" };
           }
+
+          // Try Contact.create (modern Expo SDK 58 class API)
+          if (Contacts.Contact && typeof Contacts.Contact.create === "function") {
+            try {
+              await Contacts.Contact.create({
+                givenName,
+                familyName,
+                company: card.company || "",
+                jobTitle: card.job_title || "",
+                note: card.notes || "Saved with SBusinessCard Scanner",
+                phones,
+                emails,
+                urlAddresses: urls,
+                addresses,
+              });
+              if (typeof showAlert === "function") {
+                showAlert({
+                  title: "Contact Saved!",
+                  message: `"${fullName}" has been added to your phone's address book.`,
+                  type: "success",
+                });
+              }
+              return { success: true, method: "native_class" };
+            } catch (createErr) {
+              console.warn("Contact.create error:", createErr);
+            }
+          }
+        } else {
+          // Permission denied
+          if (typeof showAlert === "function") {
+            showAlert({
+              title: "Contacts Permission Needed",
+              message: "Please allow SBusinessCard (or Expo Go) to access Contacts in iPhone Settings to save contacts directly.",
+              type: "warning",
+              buttons: [
+                { text: "Open Settings", onPress: () => Linking.openSettings() },
+                { text: "Cancel", style: "cancel" },
+              ],
+            });
+          }
+          return { success: false, error: "Permission denied" };
         }
       }
     } catch (nativeErr) {
-      console.warn("Direct native contact insertion encountered an issue, trying vCard fallback:", nativeErr);
+      console.warn("Native contact insertion encountered error:", nativeErr);
     }
   }
 
   // 2. High-reliability vCard Fallback
-  // Works 100% on iOS Safari & Android without requiring any native permissions
+  // Opens Apple iOS native Contacts sheet to save contact
   try {
     let vcardUrl;
     if (card.id) {
@@ -141,17 +168,17 @@ export async function saveToNativeContacts(card, showAlert = null) {
     console.error("vCard URL failed:", linkErr);
   }
 
-  // 3. Fallback alert guiding user to permissions if blocked
   if (typeof showAlert === "function") {
     showAlert({
-      title: "Contact Permission Needed",
-      message: "Please allow SBusinessCard to access Contacts in iPhone Settings to save contacts directly.",
-      type: "warning",
+      title: "Unable to Save Contact",
+      message: "Please check that Contacts permission is enabled in iPhone Settings.",
+      type: "error",
       buttons: [
-        { text: "Settings", onPress: () => Linking.openSettings() },
-        { text: "Dismiss", style: "cancel" },
+        { text: "Open Settings", onPress: () => Linking.openSettings() },
+        { text: "OK", style: "cancel" },
       ],
     });
   }
-  return { success: false, error: "Permissions denied or unsupported" };
+
+  return { success: false, error: "Failed to save contact" };
 }

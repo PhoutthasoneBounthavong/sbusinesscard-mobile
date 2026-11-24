@@ -365,7 +365,7 @@ export default function ScannerScreen({ onNavigateToVault, onClose, insets }) {
     if (!cardData || saving) return;
     setSaving(true);
     try {
-      const result = await saveToNativeContacts(cardData);
+      const result = await saveToNativeContacts(cardData, showAlert);
       if (result && result.success) {
         if (result.method !== "vcard") {
           showAlert({
@@ -374,16 +374,6 @@ export default function ScannerScreen({ onNavigateToVault, onClose, insets }) {
             type: "success",
           });
         }
-      } else {
-        showAlert({
-          title: "Contacts Notice",
-          message: "Could not access Contacts directly. Please allow SBusinessCard in iPhone Settings, or use vCard to import.",
-          type: "warning",
-          buttons: [
-            { text: "Open Settings", onPress: () => Linking.openSettings() },
-            { text: "OK", style: "cancel" },
-          ],
-        });
       }
     } catch (err) {
       showAlert({
