@@ -14,9 +14,12 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { loginUser, registerUser } from "../api";
 import { useAlert } from "../context/AlertContext";
+import { useTheme } from "../context/ThemeContext";
+import ThemeToggle from "../components/ThemeToggle";
 
 export default function AuthScreen({ onAuthSuccess, insets }) {
   const { showAlert } = useAlert();
+  const { theme, isDark } = useTheme();
   const [isRegister, setIsRegister] = useState(false);
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
@@ -94,63 +97,74 @@ export default function AuthScreen({ onAuthSuccess, insets }) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.background }]}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView
         contentContainerStyle={[
           styles.scrollContent,
           {
-            paddingTop: (insets?.top || 20) + 20,
+            paddingTop: (insets?.top || 20) + 10,
             paddingBottom: (insets?.bottom || 20) + 30,
           },
         ]}
         keyboardShouldPersistTaps="handled"
       >
+        {/* Top Right Theme Toggle */}
+        <View style={{ alignItems: "flex-end", width: "100%", paddingHorizontal: 4, marginBottom: 16 }}>
+          <ThemeToggle />
+        </View>
+
         {/* App Branding */}
         <View style={styles.header}>
-          <View style={styles.iconCircle}>
-            <Ionicons name="card" size={40} color="#0A84FF" />
+          <View style={[styles.iconCircle, { backgroundColor: isDark ? "rgba(10, 132, 255, 0.15)" : "#EBE5D8" }]}>
+            <Ionicons name="card" size={40} color={theme.accent} />
           </View>
-          <Text style={styles.title}>SBusinessCard</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: theme.textPrimary }]}>SBusinessCard</Text>
+          <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
             Business Card Scanner
           </Text>
         </View>
 
         {/* Tab Switcher */}
-        <View style={styles.segmentContainer}>
+        <View style={[styles.segmentContainer, { backgroundColor: isDark ? "rgba(255, 255, 255, 0.08)" : "#E8E2D5" }]}>
           <TouchableOpacity
-            style={[styles.segmentButton, !isRegister && styles.segmentActive]}
+            style={[
+              styles.segmentButton,
+              !isRegister && [styles.segmentActive, { backgroundColor: isDark ? "#2C2C2E" : "#FFFFFF" }],
+            ]}
             onPress={() => setIsRegister(false)}
             activeOpacity={0.8}
           >
-            <Text style={[styles.segmentText, !isRegister && styles.segmentTextActive]}>
+            <Text style={[styles.segmentText, { color: !isRegister ? theme.textPrimary : theme.textSecondary }]}>
               Sign In
             </Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.segmentButton, isRegister && styles.segmentActive]}
+            style={[
+              styles.segmentButton,
+              isRegister && [styles.segmentActive, { backgroundColor: isDark ? "#2C2C2E" : "#FFFFFF" }],
+            ]}
             onPress={() => setIsRegister(true)}
             activeOpacity={0.8}
           >
-            <Text style={[styles.segmentText, isRegister && styles.segmentTextActive]}>
+            <Text style={[styles.segmentText, { color: isRegister ? theme.textPrimary : theme.textSecondary }]}>
               Create Account
             </Text>
           </TouchableOpacity>
         </View>
 
         {/* Form Inputs */}
-        <View style={styles.formCard}>
+        <View style={[styles.formCard, { backgroundColor: theme.surface, borderColor: theme.border }]}>
           {isRegister && (
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>FULL NAME</Text>
-              <View style={styles.inputWrapper}>
-                <Ionicons name="person-outline" size={18} color="#86868B" style={styles.inputIcon} />
+              <Text style={[styles.label, { color: theme.textSecondary }]}>FULL NAME</Text>
+              <View style={[styles.inputWrapper, { backgroundColor: theme.surfaceElevated, borderColor: theme.border }]}>
+                <Ionicons name="person-outline" size={18} color={theme.textMuted} style={styles.inputIcon} />
                 <TextInput
-                  style={styles.input}
+                  style={[styles.input, { color: theme.textPrimary }]}
                   placeholder="e.g. Business Card"
-                  placeholderTextColor="#636366"
+                  placeholderTextColor={theme.textMuted}
                   value={fullName}
                   onChangeText={setFullName}
                   autoCapitalize="words"
@@ -160,13 +174,13 @@ export default function AuthScreen({ onAuthSuccess, insets }) {
           )}
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>WORK EMAIL</Text>
-            <View style={styles.inputWrapper}>
-              <Ionicons name="mail-outline" size={18} color="#86868B" style={styles.inputIcon} />
+            <Text style={[styles.label, { color: theme.textSecondary }]}>WORK EMAIL</Text>
+            <View style={[styles.inputWrapper, { backgroundColor: theme.surfaceElevated, borderColor: theme.border }]}>
+              <Ionicons name="mail-outline" size={18} color={theme.textMuted} style={styles.inputIcon} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.textPrimary }]}
                 placeholder="name@sbusinesscard.app"
-                placeholderTextColor="#636366"
+                placeholderTextColor={theme.textMuted}
                 value={email}
                 onChangeText={setEmail}
                 keyboardType="email-address"
@@ -177,13 +191,13 @@ export default function AuthScreen({ onAuthSuccess, insets }) {
           </View>
 
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>PASSWORD</Text>
-            <View style={styles.inputWrapper}>
-              <Ionicons name="lock-closed-outline" size={18} color="#86868B" style={styles.inputIcon} />
+            <Text style={[styles.label, { color: theme.textSecondary }]}>PASSWORD</Text>
+            <View style={[styles.inputWrapper, { backgroundColor: theme.surfaceElevated, borderColor: theme.border }]}>
+              <Ionicons name="lock-closed-outline" size={18} color={theme.textMuted} style={styles.inputIcon} />
               <TextInput
-                style={styles.input}
+                style={[styles.input, { color: theme.textPrimary }]}
                 placeholder="At least 6 characters"
-                placeholderTextColor="#636366"
+                placeholderTextColor={theme.textMuted}
                 value={password}
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
@@ -196,7 +210,7 @@ export default function AuthScreen({ onAuthSuccess, insets }) {
                 <Ionicons
                   name={showPassword ? "eye-off-outline" : "eye-outline"}
                   size={18}
-                  color="#86868B"
+                  color={theme.textMuted}
                 />
               </TouchableOpacity>
             </View>
@@ -204,7 +218,7 @@ export default function AuthScreen({ onAuthSuccess, insets }) {
 
           {/* Primary Submit Button */}
           <TouchableOpacity
-            style={[styles.submitButton, loading && styles.submitButtonDisabled]}
+            style={[styles.submitButton, { backgroundColor: theme.accent }, loading && styles.submitButtonDisabled]}
             onPress={handleSubmit}
             disabled={loading}
             activeOpacity={0.8}

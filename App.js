@@ -20,8 +20,11 @@ import MyDigitalCardScreen from "./src/screens/MyDigitalCardScreen";
 import AuthScreen from "./src/screens/AuthScreen";
 import { getStoredUser, getStoredToken, logoutUser } from "./src/api";
 import { AlertProvider, useAlert } from "./src/context/AlertContext";
+import { ThemeProvider, useTheme } from "./src/context/ThemeContext";
+import ThemeToggle from "./src/components/ThemeToggle";
 
 function MainApp({ user, onLogout }) {
+  const { theme, isDark } = useTheme();
   const [currentTab, setCurrentTab] = useState("vault"); // 'vault' (default home) | 'scan' | 'card'
   const insets = useSafeAreaInsets();
   const { showAlert } = useAlert();
@@ -71,33 +74,56 @@ function MainApp({ user, onLogout }) {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       <StatusBar
-        barStyle="light-content"
+        barStyle={theme.statusBarStyle}
         backgroundColor="transparent"
         translucent
       />
 
       {/* Top User Account Bar (Apple HIG Translucent Header - always visible across all tabs) */}
-      <View style={[styles.accountBar, { paddingTop: topInset + 6 }]}>
+      <View
+        style={[
+          styles.accountBar,
+          {
+            paddingTop: topInset + 6,
+            backgroundColor: theme.headerBg,
+            borderBottomColor: theme.border,
+          },
+        ]}
+      >
         <View style={styles.userBadge}>
-          <View style={styles.userAvatarCircle}>
+          <View
+            style={[
+              styles.userAvatarCircle,
+              { backgroundColor: theme.accent },
+            ]}
+          >
             <Text style={styles.avatarInitial}>
               {(user?.full_name || user?.email || "U").charAt(0).toUpperCase()}
             </Text>
           </View>
           <View style={styles.userInfo}>
-            <Text style={styles.userName} numberOfLines={1}>
+            <Text
+              style={[styles.userName, { color: theme.textPrimary }]}
+              numberOfLines={1}
+            >
               {user?.full_name || "My Business Account"}
             </Text>
-            <Text style={styles.userEmail} numberOfLines={1}>
+            <Text
+              style={[styles.userEmail, { color: theme.textSecondary }]}
+              numberOfLines={1}
+            >
               {user?.email || "Signed In"}
             </Text>
           </View>
         </View>
 
+        {/* Modern Segmented Capsule Theme Switcher */}
+        <ThemeToggle />
+
         <TouchableOpacity
-          style={styles.signOutButton}
+          style={[styles.signOutButton, { marginLeft: 10 }]}
           onPress={handleSignOutPrompt}
           activeOpacity={0.7}
         >
@@ -131,6 +157,8 @@ function MainApp({ user, onLogout }) {
           styles.tabBarWrapper,
           {
             paddingBottom: bottomInset,
+            backgroundColor: theme.tabBarBg,
+            borderTopColor: theme.border,
           },
         ]}
       >
@@ -149,13 +177,16 @@ function MainApp({ user, onLogout }) {
                 <Ionicons
                   name={isActive ? tab.activeIcon : tab.icon}
                   size={22}
-                  color={isActive ? "#409CFF" : "#86868B"}
+                  color={isActive ? theme.accent : theme.textMuted}
                   style={{ marginBottom: 3 }}
                 />
                 <Text
                   style={[
                     styles.tabLabel,
-                    isActive ? styles.tabLabelActive : styles.tabLabelInactive,
+                    {
+                      color: isActive ? theme.accent : theme.textMuted,
+                      fontWeight: isActive ? "600" : "500",
+                    },
                   ]}
                 >
                   {tab.label}
@@ -208,11 +239,13 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <AlertProvider>
-        {user ? (
-          <MainApp user={user} onLogout={handleLogout} />
-        ) : (
-          <AuthScreen onAuthSuccess={(authenticatedUser) => setUser(authenticatedUser)} />
-        )}
+        <ThemeProvider>
+          {user ? (
+            <MainApp user={user} onLogout={handleLogout} />
+          ) : (
+            <AuthScreen onAuthSuccess={(authenticatedUser) => setUser(authenticatedUser)} />
+          )}
+        </ThemeProvider>
       </AlertProvider>
     </SafeAreaProvider>
   );

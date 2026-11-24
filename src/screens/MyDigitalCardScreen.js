@@ -22,6 +22,7 @@ import {
   API_BASE,
 } from "../api";
 import { useAlert } from "../context/AlertContext";
+import { useTheme } from "../context/ThemeContext";
 
 const CARD_THEMES = [
   {
@@ -75,6 +76,7 @@ const DEFAULT_CARD = {
 
 export default function MyDigitalCardScreen({ insets }) {
   const { showAlert } = useAlert();
+  const { theme: appTheme, isDark } = useTheme();
   const [mode, setMode] = useState("preview"); // 'preview' | 'studio'
   const [card, setCard] = useState(() => getLocalDigitalCardSync() || DEFAULT_CARD);
   const [saving, setSaving] = useState(false);
@@ -189,7 +191,7 @@ export default function MyDigitalCardScreen({ insets }) {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: appTheme.background }]}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <ScrollView
@@ -203,10 +205,10 @@ export default function MyDigitalCardScreen({ insets }) {
         {/* Top Header + Mode Switcher */}
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.headerTitle}>
+            <Text style={[styles.headerTitle, { color: appTheme.textPrimary }]}>
               {mode === "studio" ? "Card Studio" : "My Digital Card"}
             </Text>
-            <Text style={styles.headerSubtitle}>
+            <Text style={[styles.headerSubtitle, { color: appTheme.textSecondary }]}>
               {mode === "studio"
                 ? "Customize your personal shareable business card"
                 : "Tap or share your QR card to connect instantly"}
@@ -217,6 +219,10 @@ export default function MyDigitalCardScreen({ insets }) {
             style={[
               styles.studioToggleBtn,
               mode === "studio" && styles.studioToggleBtnActive,
+              !isDark && mode !== "studio" && {
+                backgroundColor: appTheme.surfaceElevated,
+                borderColor: appTheme.border,
+              },
             ]}
             onPress={() => setMode(mode === "preview" ? "studio" : "preview")}
             activeOpacity={0.8}
@@ -224,10 +230,15 @@ export default function MyDigitalCardScreen({ insets }) {
             <Ionicons
               name={mode === "preview" ? "color-wand-outline" : "eye-outline"}
               size={15}
-              color="#FFFFFF"
+              color={!isDark && mode !== "studio" ? appTheme.textPrimary : "#FFFFFF"}
               style={{ marginRight: 6 }}
             />
-            <Text style={styles.studioToggleBtnText}>
+            <Text
+              style={[
+                styles.studioToggleBtnText,
+                !isDark && mode !== "studio" && { color: appTheme.textPrimary },
+              ]}
+            >
               {mode === "preview" ? "Card Studio" : "Preview"}
             </Text>
           </TouchableOpacity>
@@ -505,9 +516,9 @@ export default function MyDigitalCardScreen({ insets }) {
           /* ============================================================
              PREVIEW & INSTANT QR SHARING MODE
              ============================================================ */
-          <View style={styles.qrContainer}>
-            <Text style={styles.qrTitle}>My Contact QR</Text>
-            <Text style={styles.qrSubtitle}>
+          <View style={[styles.qrContainer, { backgroundColor: appTheme.surface, borderColor: appTheme.border }]}>
+            <Text style={[styles.qrTitle, { color: appTheme.textPrimary }]}>My Contact QR</Text>
+            <Text style={[styles.qrSubtitle, { color: appTheme.textSecondary }]}>
               Scan with iPhone or Android camera to instantly add my contact to your phone address book.
             </Text>
 

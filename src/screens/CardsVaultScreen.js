@@ -25,9 +25,11 @@ import {
 } from "../api";
 import { saveToNativeContacts } from "../services/contactSaver";
 import { useAlert } from "../context/AlertContext";
+import { useTheme } from "../context/ThemeContext";
 
 export default function CardsVaultScreen({ insets, onNavigateToScan }) {
   const { showAlert } = useAlert();
+  const { theme, isDark } = useTheme();
   // Instant 0ms initialization from in-memory local vault cache
   const [allCards, setAllCards] = useState(() => getLocalVaultCardsSync() || []);
   const [search, setSearch] = useState("");
@@ -330,13 +332,20 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
 
   const renderCard = ({ item }) => (
     <TouchableOpacity
-      style={styles.cardItem}
+      style={[
+        styles.cardItem,
+        {
+          backgroundColor: theme.surface,
+          borderColor: theme.border,
+          shadowColor: theme.shadowColor,
+        },
+      ]}
       onPress={() => handleStartEdit(item)}
       activeOpacity={0.85}
     >
       {/* Top Header Row with Name and Edit/Delete Actions */}
       <View style={styles.cardTop}>
-        <View style={styles.avatar}>
+        <View style={[styles.avatar, { backgroundColor: theme.accent }]}>
           <Text style={styles.avatarText}>
             {(item.full_name || "C")
               .split(" ")
@@ -348,12 +357,12 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
         </View>
 
         <View style={styles.cardInfo}>
-          <Text style={styles.cardName}>{item.full_name || "Contact"}</Text>
+          <Text style={[styles.cardName, { color: theme.textPrimary }]}>{item.full_name || "Contact"}</Text>
           {item.job_title ? (
-            <Text style={styles.cardTitle}>{item.job_title}</Text>
+            <Text style={[styles.cardTitle, { color: theme.textSecondary }]}>{item.job_title}</Text>
           ) : null}
           {item.company ? (
-            <Text style={styles.cardCompany}>{item.company}</Text>
+            <Text style={[styles.cardCompany, { color: theme.accent }]}>{item.company}</Text>
           ) : null}
         </View>
 
@@ -424,8 +433,8 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
             onPress={() => handleEmail(item.email)}
             activeOpacity={0.7}
           >
-            <Ionicons name="mail-outline" size={14} color="#86868B" style={styles.detailIcon} />
-            <Text style={styles.detailText}>{item.email}</Text>
+            <Ionicons name="mail-outline" size={14} color={theme.textMuted} style={styles.detailIcon} />
+            <Text style={[styles.detailText, { color: isDark ? "#D1D1D6" : "#4A453E" }]}>{item.email}</Text>
           </TouchableOpacity>
         ) : null}
 
@@ -435,59 +444,48 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
             onPress={() => handleOpenUrl(item.website)}
             activeOpacity={0.7}
           >
-            <Ionicons name="globe-outline" size={14} color="#86868B" style={styles.detailIcon} />
-            <Text style={[styles.detailText, styles.detailLink]}>{item.website}</Text>
+            <Ionicons name="globe-outline" size={14} color={theme.textMuted} style={styles.detailIcon} />
+            <Text style={[styles.detailText, styles.detailLink, { color: theme.accent }]}>{item.website}</Text>
           </TouchableOpacity>
         ) : null}
 
         {item.address ? (
           <View style={styles.detailRow}>
-            <Ionicons name="location-outline" size={14} color="#86868B" style={styles.detailIcon} />
-            <Text style={styles.detailText} numberOfLines={2}>
+            <Ionicons name="location-outline" size={14} color={theme.textMuted} style={styles.detailIcon} />
+            <Text style={[styles.detailText, { color: isDark ? "#D1D1D6" : "#4A453E" }]} numberOfLines={2}>
               {item.address}
             </Text>
           </View>
         ) : null}
 
         {item.notes ? (
-          <View style={styles.notesRow}>
-            <Text style={styles.notesText}>Note: {item.notes}</Text>
+          <View style={[styles.notesRow, { backgroundColor: theme.surfaceElevated }]}>
+            <Text style={[styles.notesText, { color: theme.textSecondary }]}>Note: {item.notes}</Text>
           </View>
         ) : null}
       </View>
 
       {/* Quick Action Chips Footer */}
-      <View style={styles.actionsRow}>
+      <View style={[styles.actionsRow, { borderTopColor: theme.borderSubtle }]}>
         {item.phone ? (
           <TouchableOpacity
-            style={styles.actionChip}
+            style={[styles.actionChip, { backgroundColor: isDark ? "#2C2C2E" : "#EBE5D8", borderColor: theme.border }]}
             onPress={() => handleCall(item.phone, item.full_name)}
             activeOpacity={0.7}
           >
-            <Ionicons name="call-outline" size={13} color="#FFFFFF" style={{ marginRight: 4 }} />
-            <Text style={styles.actionChipText}>Call</Text>
+            <Ionicons name="call-outline" size={13} color={isDark ? "#FFFFFF" : "#1F1D1A"} style={{ marginRight: 4 }} />
+            <Text style={[styles.actionChipText, { color: isDark ? "#FFFFFF" : "#1F1D1A" }]}>Call</Text>
           </TouchableOpacity>
         ) : null}
 
-        {/*{item.phone ? (
-          <TouchableOpacity
-            style={[styles.actionChip, styles.actionChipWhatsApp]}
-            onPress={() => handleWhatsApp(item.phone, item.full_name)}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="logo-whatsapp" size={13} color="#25D366" style={{ marginRight: 4 }} />
-            <Text style={styles.actionChipWhatsAppText}>WhatsApp</Text>
-          </TouchableOpacity>
-        ) : null} */}
-
         {item.email ? (
           <TouchableOpacity
-            style={styles.actionChip}
+            style={[styles.actionChip, { backgroundColor: isDark ? "#2C2C2E" : "#EBE5D8", borderColor: theme.border }]}
             onPress={() => handleEmail(item.email)}
             activeOpacity={0.7}
           >
-            <Ionicons name="mail-outline" size={13} color="#FFFFFF" style={{ marginRight: 4 }} />
-            <Text style={styles.actionChipText}>Email</Text>
+            <Ionicons name="mail-outline" size={13} color={isDark ? "#FFFFFF" : "#1F1D1A"} style={{ marginRight: 4 }} />
+            <Text style={[styles.actionChipText, { color: isDark ? "#FFFFFF" : "#1F1D1A" }]}>Email</Text>
           </TouchableOpacity>
         ) : null}
 
@@ -504,13 +502,13 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
-          <Text style={styles.headerTitle}>Cards Vault</Text>
+          <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>Cards Vault</Text>
           <View style={styles.subtitleRow}>
-            <Text style={styles.headerSubtitle}>
+            <Text style={[styles.headerSubtitle, { color: theme.textSecondary }]}>
               {cards.length} Digitized Contact{cards.length === 1 ? "" : "s"}
             </Text>
             <TouchableOpacity
@@ -579,19 +577,19 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search-outline" size={16} color="#86868B" style={{ marginRight: 8 }} />
+        <View style={[styles.searchBar, { backgroundColor: theme.surface, borderColor: theme.border }]}>
+          <Ionicons name="search-outline" size={16} color={theme.textMuted} style={{ marginRight: 8 }} />
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: theme.textPrimary }]}
             placeholder="Search name, company, email..."
-            placeholderTextColor="#86868B"
+            placeholderTextColor={theme.textMuted}
             value={search}
             onChangeText={setSearch}
             clearButtonMode="while-editing"
           />
           {search ? (
             <TouchableOpacity onPress={() => setSearch("")}>
-              <Ionicons name="close-circle" size={16} color="#86868B" />
+              <Ionicons name="close-circle" size={16} color={theme.textMuted} />
             </TouchableOpacity>
           ) : null}
         </View>
@@ -638,29 +636,29 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
 
           <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : undefined}
-            style={styles.bottomSheet}
+            style={[styles.bottomSheet, { backgroundColor: theme.surface }]}
           >
             {/* Grabber Handle */}
             <View style={styles.grabberContainer}>
-              <View style={styles.grabberPill} />
+              <View style={[styles.grabberPill, { backgroundColor: theme.border }]} />
             </View>
 
             {/* Navigation Header */}
-            <View style={styles.sheetHeader}>
+            <View style={[styles.sheetHeader, { borderBottomColor: theme.border }]}>
               <TouchableOpacity
                 onPress={() => setEditingCard(null)}
                 style={styles.sheetCancelBtn}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               >
-                <Text style={styles.sheetCancelText}>Cancel</Text>
+                <Text style={[styles.sheetCancelText, { color: theme.accent }]}>Cancel</Text>
               </TouchableOpacity>
 
-              <Text style={styles.sheetTitle}>Edit Contact</Text>
+              <Text style={[styles.sheetTitle, { color: theme.textPrimary }]}>Edit Contact</Text>
 
               <TouchableOpacity
                 onPress={handleSaveEdit}
                 disabled={savingEdit}
-                style={styles.sheetSaveBtn}
+                style={[styles.sheetSaveBtn, { backgroundColor: theme.accent }]}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
               >
                 {savingEdit ? (
@@ -680,7 +678,7 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
             >
               {/* Contact Hero Avatar & Live Name */}
               <View style={styles.heroSection}>
-                <View style={styles.heroAvatar}>
+                <View style={[styles.heroAvatar, { backgroundColor: theme.accent }]}>
                   <Text style={styles.heroAvatarText}>
                     {(editForm.full_name || "C")
                       .split(" ")
@@ -690,10 +688,10 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
                       .toUpperCase()}
                   </Text>
                 </View>
-                <Text style={styles.heroName} numberOfLines={1}>
+                <Text style={[styles.heroName, { color: theme.textPrimary }]} numberOfLines={1}>
                   {editForm.full_name || "New Contact"}
                 </Text>
-                <Text style={styles.heroRole} numberOfLines={1}>
+                <Text style={[styles.heroRole, { color: theme.textSecondary }]} numberOfLines={1}>
                   {[editForm.job_title, editForm.company]
                     .filter(Boolean)
                     .join(" • ") || "Digital Business Card"}
@@ -701,19 +699,19 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
               </View>
 
               {/* Group 1: Identity & Professional Role */}
-              <Text style={styles.sectionHeader}>IDENTITY</Text>
-              <View style={styles.groupedCard}>
+              <Text style={[styles.sectionHeader, { color: theme.textSecondary }]}>IDENTITY</Text>
+              <View style={[styles.groupedCard, { backgroundColor: theme.surfaceElevated, borderColor: theme.border }]}>
                 {/* Full Name */}
                 <View style={styles.inputRow}>
-                  <View style={[styles.iconBadge, { backgroundColor: "rgba(0,113,227,0.15)" }]}>
-                    <Ionicons name="person" size={14} color="#0071E3" />
+                  <View style={[styles.iconBadge, { backgroundColor: theme.badgeBg }]}>
+                    <Ionicons name="person" size={14} color={theme.accent} />
                   </View>
                   <View style={styles.inputWrapper}>
-                    <Text style={styles.inputMiniLabel}>FULL NAME</Text>
+                    <Text style={[styles.inputMiniLabel, { color: theme.textSecondary }]}>FULL NAME</Text>
                     <TextInput
-                      style={styles.insetTextInput}
+                      style={[styles.insetTextInput, { color: theme.textPrimary }]}
                       placeholder="Full Name"
-                      placeholderTextColor="#636366"
+                      placeholderTextColor={theme.textMuted}
                       value={editForm.full_name}
                       onChangeText={(text) =>
                         setEditForm((prev) => ({ ...prev, full_name: text }))
@@ -722,19 +720,19 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
                   </View>
                 </View>
 
-                <View style={styles.rowDivider} />
+                <View style={[styles.rowDivider, { backgroundColor: theme.borderSubtle }]} />
 
                 {/* Job Title */}
                 <View style={styles.inputRow}>
-                  <View style={[styles.iconBadge, { backgroundColor: "rgba(0,113,227,0.15)" }]}>
-                    <Ionicons name="briefcase" size={14} color="#0071E3" />
+                  <View style={[styles.iconBadge, { backgroundColor: theme.badgeBg }]}>
+                    <Ionicons name="briefcase" size={14} color={theme.accent} />
                   </View>
                   <View style={styles.inputWrapper}>
-                    <Text style={styles.inputMiniLabel}>JOB TITLE</Text>
+                    <Text style={[styles.inputMiniLabel, { color: theme.textSecondary }]}>JOB TITLE</Text>
                     <TextInput
-                      style={styles.insetTextInput}
+                      style={[styles.insetTextInput, { color: theme.textPrimary }]}
                       placeholder="e.g. Chief Executive Officer"
-                      placeholderTextColor="#636366"
+                      placeholderTextColor={theme.textMuted}
                       value={editForm.job_title}
                       onChangeText={(text) =>
                         setEditForm((prev) => ({ ...prev, job_title: text }))
@@ -743,19 +741,19 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
                   </View>
                 </View>
 
-                <View style={styles.rowDivider} />
+                <View style={[styles.rowDivider, { backgroundColor: theme.borderSubtle }]} />
 
                 {/* Company */}
                 <View style={styles.inputRow}>
-                  <View style={[styles.iconBadge, { backgroundColor: "rgba(0,113,227,0.15)" }]}>
-                    <Ionicons name="business" size={14} color="#0071E3" />
+                  <View style={[styles.iconBadge, { backgroundColor: theme.badgeBg }]}>
+                    <Ionicons name="business" size={14} color={theme.accent} />
                   </View>
                   <View style={styles.inputWrapper}>
-                    <Text style={styles.inputMiniLabel}>COMPANY</Text>
+                    <Text style={[styles.inputMiniLabel, { color: theme.textSecondary }]}>COMPANY</Text>
                     <TextInput
-                      style={styles.insetTextInput}
+                      style={[styles.insetTextInput, { color: theme.textPrimary }]}
                       placeholder="e.g. SBusinessCard Inc."
-                      placeholderTextColor="#636366"
+                      placeholderTextColor={theme.textMuted}
                       value={editForm.company}
                       onChangeText={(text) =>
                         setEditForm((prev) => ({ ...prev, company: text }))
@@ -766,19 +764,19 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
               </View>
 
               {/* Group 2: Contact Communication */}
-              <Text style={styles.sectionHeader}>CONTACT DETAILS</Text>
-              <View style={styles.groupedCard}>
+              <Text style={[styles.sectionHeader, { color: theme.textSecondary }]}>CONTACT DETAILS</Text>
+              <View style={[styles.groupedCard, { backgroundColor: theme.surfaceElevated, borderColor: theme.border }]}>
                 {/* Phone Number */}
                 <View style={styles.inputRow}>
                   <View style={[styles.iconBadge, { backgroundColor: "rgba(52,199,89,0.18)" }]}>
                     <Ionicons name="call" size={14} color="#34C759" />
                   </View>
                   <View style={styles.inputWrapper}>
-                    <Text style={styles.inputMiniLabel}>PHONE NUMBER</Text>
+                    <Text style={[styles.inputMiniLabel, { color: theme.textSecondary }]}>PHONE NUMBER</Text>
                     <TextInput
-                      style={styles.insetTextInput}
+                      style={[styles.insetTextInput, { color: theme.textPrimary }]}
                       placeholder="+1 (555) 000-0000"
-                      placeholderTextColor="#636366"
+                      placeholderTextColor={theme.textMuted}
                       keyboardType="phone-pad"
                       value={editForm.phone}
                       onChangeText={(text) =>
@@ -798,7 +796,7 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
                   ) : null}
                 </View>
 
-                <View style={styles.rowDivider} />
+                <View style={[styles.rowDivider, { backgroundColor: theme.borderSubtle }]} />
 
                 {/* Email Address */}
                 <View style={styles.inputRow}>
@@ -806,11 +804,11 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
                     <Ionicons name="mail" size={14} color="#0A84FF" />
                   </View>
                   <View style={styles.inputWrapper}>
-                    <Text style={styles.inputMiniLabel}>EMAIL ADDRESS</Text>
+                    <Text style={[styles.inputMiniLabel, { color: theme.textSecondary }]}>EMAIL ADDRESS</Text>
                     <TextInput
-                      style={styles.insetTextInput}
+                      style={[styles.insetTextInput, { color: theme.textPrimary }]}
                       placeholder="email@example.com"
-                      placeholderTextColor="#636366"
+                      placeholderTextColor={theme.textMuted}
                       keyboardType="email-address"
                       autoCapitalize="none"
                       value={editForm.email}
@@ -821,7 +819,7 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
                   </View>
                 </View>
 
-                <View style={styles.rowDivider} />
+                <View style={[styles.rowDivider, { backgroundColor: theme.borderSubtle }]} />
 
                 {/* Website */}
                 <View style={styles.inputRow}>
@@ -829,11 +827,11 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
                     <Ionicons name="globe" size={14} color="#BF5AF2" />
                   </View>
                   <View style={styles.inputWrapper}>
-                    <Text style={styles.inputMiniLabel}>WEBSITE</Text>
+                    <Text style={[styles.inputMiniLabel, { color: theme.textSecondary }]}>WEBSITE</Text>
                     <TextInput
-                      style={styles.insetTextInput}
+                      style={[styles.insetTextInput, { color: theme.textPrimary }]}
                       placeholder="https://example.com"
-                      placeholderTextColor="#636366"
+                      placeholderTextColor={theme.textMuted}
                       keyboardType="url"
                       autoCapitalize="none"
                       value={editForm.website}
@@ -846,19 +844,19 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
               </View>
 
               {/* Group 3: Location & Additional Notes */}
-              <Text style={styles.sectionHeader}>LOCATION & NOTES</Text>
-              <View style={styles.groupedCard}>
+              <Text style={[styles.sectionHeader, { color: theme.textSecondary }]}>LOCATION & NOTES</Text>
+              <View style={[styles.groupedCard, { backgroundColor: theme.surfaceElevated, borderColor: theme.border }]}>
                 {/* Physical Address */}
                 <View style={styles.inputRow}>
                   <View style={[styles.iconBadge, { backgroundColor: "rgba(255,149,0,0.18)" }]}>
                     <Ionicons name="location" size={14} color="#FF9500" />
                   </View>
                   <View style={styles.inputWrapper}>
-                    <Text style={styles.inputMiniLabel}>PHYSICAL ADDRESS</Text>
+                    <Text style={[styles.inputMiniLabel, { color: theme.textSecondary }]}>PHYSICAL ADDRESS</Text>
                     <TextInput
-                      style={styles.insetTextInput}
+                      style={[styles.insetTextInput, { color: theme.textPrimary }]}
                       placeholder="123 Main St, City, Country"
-                      placeholderTextColor="#636366"
+                      placeholderTextColor={theme.textMuted}
                       value={editForm.address}
                       onChangeText={(text) =>
                         setEditForm((prev) => ({ ...prev, address: text }))
@@ -867,7 +865,7 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
                   </View>
                 </View>
 
-                <View style={styles.rowDivider} />
+                <View style={[styles.rowDivider, { backgroundColor: theme.borderSubtle }]} />
 
                 {/* Notes / Tags */}
                 <View style={[styles.inputRow, { alignItems: "flex-start", paddingTop: 8 }]}>
@@ -875,11 +873,11 @@ export default function CardsVaultScreen({ insets, onNavigateToScan }) {
                     <Ionicons name="document-text" size={14} color="#FFD60A" />
                   </View>
                   <View style={styles.inputWrapper}>
-                    <Text style={styles.inputMiniLabel}>NOTES / TAGS</Text>
+                    <Text style={[styles.inputMiniLabel, { color: theme.textSecondary }]}>NOTES / TAGS</Text>
                     <TextInput
-                      style={[styles.insetTextInput, styles.notesInput]}
+                      style={[styles.insetTextInput, styles.notesInput, { color: theme.textPrimary }]}
                       placeholder="Add meeting notes, context or tags..."
-                      placeholderTextColor="#636366"
+                      placeholderTextColor={theme.textMuted}
                       multiline
                       numberOfLines={3}
                       value={editForm.notes}
